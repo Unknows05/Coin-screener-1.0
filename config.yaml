@@ -1,0 +1,93 @@
+# Coin Screener API — Configuration
+
+# Top 30 liquid + volatile coins (quality over quantity)
+symbols:
+  # Tier 1: Majors (high liquidity, trend-following friendly)
+  - BTCUSDT
+  - ETHUSDT
+  - BNBUSDT
+  - SOLUSDT
+  - XRPUSDT
+  # Tier 2: Large Cap (good volume, clear trends)
+  - DOGEUSDT
+  - ADAUSDT
+  - AVAXUSDT
+  - LINKUSDT
+  - DOTUSDT
+  - ATOMUSDT
+  - NEARUSDT
+  - FILUSDT
+  # Tier 3: DeFi (volatile, pattern-rich)
+  - UNIUSDT
+  - AAVEUSDT
+  - ARBUSDT
+  - OPUSDT
+  - INJUSDT
+  - FETUSDT
+  - RENDERUSDT
+  # Tier 4: Volatile Memes (high ATR, breakout-prone)
+  - 1000PEPEUSDT
+  - WIFUSDT
+  - 1000FLOKIUSDT
+  # Tier 5: New/Trending (momentum plays)
+  - SUIUSDT
+  - SEIUSDT
+  - APTUSDT
+  - TIAUSDT
+  - ONDOUSDT
+  - STXUSDT
+  - ORDIUSDT
+
+# Scan settings
+scan:
+  interval_minutes: 15        # Auto-scan interval
+  kline_limit: 200            # Candles per timeframe
+  auto_discover: false        # Auto-discover all USDT-M perpetual coins (disabled - memory)
+  min_quote_volume: 5000000   # Min 24h quote volume ($5M) to include coin
+  squeeze_threshold: 0.05     # BB Width < 5% considered "Squeeze"
+
+# Timeframes for multi-timeframe analysis
+timeframes:
+  - 15m
+  - 1h
+  - 4h
+
+# Timeframe weights for scoring (must match timeframes above)
+timeframe_weights:
+  15m: 0.60   # Primary timeframe - highest weight
+  1h: 0.30    # Secondary timeframe
+  4h: 0.10    # Long-term trend context
+
+# Signal thresholds (Aggressive Mode - Refined)
+signal:
+  long_min_score: 55          # RAISED: From 50 to 55. Filter out weak noise.
+  short_min_score: 55         # RAISED: From 50 to 55.
+  high_confidence: 70         # Score threshold for high confidence
+  wait_max_score: 45          # Score below this = WAIT
+  require_clear_regime: false # DISABLED: Allow signals during Sideways (Breakout Phase)
+  require_volume_confirm: false # DISABLED: Catch moves before volume confirmation
+
+# Alpha factor weights
+alpha_weights:
+  mean_reversion: 0.25
+  momentum: 0.30
+  volume: 0.20
+  volatility: 0.15
+  pattern: 0.10
+
+# Regime detection
+regime:
+  adx_threshold: 25           # Below this = SIDEWAYS
+  vol_lookback: 20
+  atr_period: 14
+
+# Risk parameters (for SL/TP calculation)
+risk:
+  sl_atr_multiplier: 1.5     # SL = entry - (ATR * multiplier)
+  tp_atr_multiplier: 3.0     # TP = entry + (ATR * multiplier)
+  max_risk_pct: 0.02         # Max 2% risk per trade (position sizing reference)
+
+# Logging
+logging:
+  level: INFO
+  file: data/api.log
