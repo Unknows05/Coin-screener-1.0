@@ -10,6 +10,7 @@ import asyncio
 from datetime import datetime, timedelta
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Optional
 
 import httpx
 from fastapi import FastAPI
@@ -394,6 +395,64 @@ async def get_symbol_liquidations(symbol: str):
     except Exception as e:
         logger.error(f"Symbol Liquidations Error: {e}")
         return {"ok": False, "error": str(e)}
+
+
+@app.get("/api/liquidations/zones")
+async def get_liquidation_zones(symbol: Optional[str] = None, zone_size_pct: float = 0.02):
+    """
+    Get liquidation price zones/clusters.
+    Groups liquidations by price levels to show concentration areas.
+    
+    - symbol: Optional symbol filter (e.g., "BTC")
+    - zone_size_pct: Zone size as percentage of price (default 2%)
+    """
+    try:
+        # Fetch fresh data if needed
+        if not liquidation_heatmap.liquidations:
+            await update_liquidation_data()
+        
+        # Calculate price zones
+        zones = liquidation_heatmap.calculate_price_zones(
+            symbol=symbol,
+            zone_size_pct=zone_size_pct
+        )
+        
+        return {
+            "ok": True,
+            "zones": zones,
+            "updated_at": liquidation_heatmap.last_update.isoformat() if liquidation_heatmap.last_update else None
+        }
+    except Exception as e:
+        logger.error(f"Liquidation Zones Error: {e}")
+        return {"ok": False, "error": str(e), "zones": {}}
+
+
+@app.get("/api/liquidations/map")
+async def get_full_liquidation_map():
+    """
+    Get complete liquidation heatmap with all metrics.
+    Combines summary, heatmap, and long/short ratio.
+    """
+    try:
+        # Fetch fresh data if needed
+        if not liquidation_heatmap.heatmap_data:
+            await update_liquidation_data()
+        
+        heatmap = liquidation_heatmap.calculate_heatmap()
+        summary = liquidation_heatmap.get_summary()
+        
+        return {
+            "ok": True,
+            "summary": summary,
+            "heatmap": heatmap.get("heatmap", []),
+            "total_value": heatmap.get("total_value", 0),
+            "long_short_ratio": heatmap.get("long_short_ratio", 1),
+            "total_liquidations": heatmap.get("total_liquidations", 0),
+            "updated_at": heatmap.get("updated_at")
+        }
+    except Exception as e:
+        logger.error(f"Liquidation Map Error: {e}")
+        return {"ok": False, "error": str(e), "heatmap": []}
 
 
 # ---- Dashboard Route (FIXED) ----

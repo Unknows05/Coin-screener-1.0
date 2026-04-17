@@ -13,9 +13,7 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.binance_api import BinanceFuturesAPI
-from src.scorer import Scorer
-from src.signals import generate_signal
+from src.engine import ScreeningEngine
 from src.display import print_screen_result, print_status, print_error
 
 # ---- Config ----
@@ -44,83 +42,6 @@ def setup_logging(config: dict):
     )
 
 
-# ---- Screening Engine ----
-
-class CoinScreener:
-    """Main screening engine."""
-
-    def __init__(self, config: dict):
-        self.config = config
-        self.api = BinanceFuturesAPI()
-        self.scorer = Scorer(config)
-        self.symbols = config.get("symbols", [])
-        self.timeframes = config.get("timeframes", ["15m", "1h", "4h"])
-        self.kline_limit = config.get("scan", {}).get("kline_limit", 200)
-        self.logger = logging.getLogger(__name__)
-
-    def run(self) -> list[dict]:
-        """
-        Run full screening cycle.
-
-        Returns:
-            List of signal dicts for all coins.
-        """
-        start_time = time.time()
-        self.logger.info(f"Starting scan of {len(self.symbols)} coins...")
-
-        # Fetch 24hr ticker for current prices
-        try:
-            all_tickers = self.api.get_all_tickers()
-            ticker_map = {t["symbol"]: t for t in all_tickers}
-        except Exception as e:
-            self.logger.error(f"Failed to fetch tickers: {e}")
-            return []
-
-        results = []
-
-        for symbol in self.symbols:
-            try:
-                # Get klines for all timeframes
-                klines_by_tf = {}
-                for tf in self.timeframes:
-                    klines = self.api.get_klines(symbol, tf, self.kline_limit)
-                    klines_by_tf[tf] = klines
-
-                if not any(klines_by_tf.values()):
-                    continue
-
-                # Get price
-                price = float(ticker_map.get(symbol, {}).get("lastPrice", 0))
-                if price == 0 and klines_by_tf.get("15m"):
-                    price = klines_by_tf["15m"][-1]["close"]
-
-                # Score
-                score_result = self.scorer.score_coin(klines_by_tf)
-
-                # Generate signal
-                coin_data = {
-                    "symbol": symbol,
-                    "price": price,
-                    "klines": klines_by_tf.get("15m", []),
-                    **score_result
-                }
-                signal_result = generate_signal(coin_data, self.config)
-                results.append(signal_result)
-
-            except Exception as e:
-                self.logger.warning(f"Error processing {symbol}: {e}")
-                continue
-
-        elapsed = time.time() - start_time
-        self.logger.info(f"Scan complete: {len(results)} coins in {elapsed:.1f}s")
-
-        return results
-
-    def close(self):
-        """Cleanup resources."""
-        self.api.close()
-
-
 # ---- Main Runner ----
 
 def main():
@@ -132,8 +53,8 @@ def main():
 
     print_status("🚀 Coin Screener Bot starting...")
 
-    # Initialize screener
-    screener = CoinScreener(config)
+    # Initialize screening engine (single source of truth)
+    screener = ScreeningEngine(config, cache_dir="data")
     scan_count = 0
 
     # Handle graceful shutdown
@@ -157,12 +78,12 @@ def main():
             scan_count += 1
             print_status(f"🔄 Scan #{scan_count} — {datetime.now().strftime('%H:%M:%S')}")
 
-            results = screener.run()
+            result = screener.scan()
 
-            if results:
-                print_screen_result(results, elapsed_seconds=0)  # elapsed already in results
+            if result.get("ok"):
+                print_screen_result(result["data"], elapsed_seconds=result["elapsed_seconds"])
             else:
-                print_error("No results returned.")
+                print_error(f"Scan failed: {result.get('error', 'Unknown error')}")
 
             # Wait for next scan
             next_scan = datetime.now().strftime("%H:%M:%S")
