@@ -407,20 +407,25 @@ function renderCharts(data){
 
 // Alerts (3 Sections: Recent, High Confidence, Near Entry)
 async function loadAlerts(){
-    // Load signals for all 3 sections
+    // Load signals from database for accurate SL/TP status
     try{
-        var d=await api('/api/alerts');var signals=d.data||[];
+        // Get full signal history from database (includes WIN/LOSS/OPEN status)
+        var d=await api('/api/signals/history?limit=100');
+        var allSignals=d.data||[];
+        
+        // Filter only active signals (LONG or SHORT) with OPEN/PENDING status
+        var openSignals=allSignals.filter(s=>s.result==='OPEN'||s.result==='PENDING');
         
         // Section 1: Recent Signals (sorted by timestamp, newest first)
-        var recent=signals.slice().sort((a,b)=>new Date(b.timestamp||0)-new Date(a.timestamp||0)).slice(0,20);
+        var recent=openSignals.slice().sort((a,b)=>new Date(b.timestamp||0)-new Date(a.timestamp||0)).slice(0,20);
         renderAlertList('alert-list-recent',recent,'time');
         
         // Section 2: High Confidence (>=70%)
-        var highConf=signals.filter(s=>(s.confidence||0)>=70).sort((a,b)=>b.confidence-a.confidence);
+        var highConf=openSignals.filter(s=>(s.confidence||0)>=70).sort((a,b)=>b.confidence-a.confidence);
         renderAlertList('alert-list-confidence',highConf,'confidence');
         
         // Section 3: Near Entry (price within 2% of entry_price)
-        var nearEntry=signals.filter(s=>{
+        var nearEntry=openSignals.filter(s=>{
             if(!s.entry_price||!s.price)return false;
             var diffPct=Math.abs((s.price-s.entry_price)/s.entry_price)*100;
             return diffPct<=2;
@@ -438,7 +443,7 @@ async function loadAlerts(){
 function renderAlertList(containerId,signals,context){
     var el=$(containerId);
     if(!signals.length){
-        var emptyMsg=context==='time'?'No recent signals':context==='confidence'?'No high confidence signals':'No signals near entry';
+        var emptyMsg=context==='time'?'No open signals':context==='confidence'?'No high confidence open signals':'No open signals near entry';
         el.innerHTML=`<div style="padding:20px;color:var(--tx2);text-align:center;font-size:12px">${emptyMsg}</div>`;
         return;
     }
@@ -457,11 +462,15 @@ function renderAlertList(containerId,signals,context){
             subInfo=`${pct>0?'+':''}${pct}% from entry`;
         }
         
+        // Status badge based on result (OPEN/PENDING/WIN/LOSS)
+        var statusClass=x.result==='WIN'?'win':x.result==='LOSS'?'loss':'open';
+        var statusText=x.result==='PENDING'?'⏳ PENDING':x.result==='OPEN'?'⏳ OPEN':x.result==='WIN'?'✅ TP':x.result==='LOSS'?'❌ SL':x.signal;
+        
         h+=`<div class="alert-row" onclick="deepScan('${x.symbol}')">
             <div class="alert-icon ${iconClass}">${icon}</div>
             <div class="alert-info"><div class="main">${x.symbol}</div><div class="sub">${subInfo}</div></div>
             <div class="alert-amount"><div class="val">${fp(x.price)}</div><div class="sub">${x.signal}</div></div>
-            <div class="alert-status ${x.signal==='LONG'?'open':x.signal==='SHORT'?'loss':''}">${x.confidence}%</div>
+            <div class="alert-status ${statusClass}">${statusText}</div>
         </div>`;
     });
     el.innerHTML=h;
