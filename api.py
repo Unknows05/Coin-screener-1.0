@@ -7,6 +7,9 @@ import sys
 import yaml
 import logging
 import asyncio
+import zipfile
+import io
+import os
 from datetime import datetime, timedelta
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -14,7 +17,7 @@ from typing import Optional
 
 import httpx
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 # Add project root to path
@@ -453,6 +456,92 @@ async def get_full_liquidation_map():
     except Exception as e:
         logger.error(f"Liquidation Map Error: {e}")
         return {"ok": False, "error": str(e), "heatmap": []}
+
+
+@app.get("/api/export/code")
+async def export_code():
+    """
+    Download entire project code as ZIP file.
+    Users can use this to backup or share the codebase.
+    """
+    try:
+        # Create ZIP in memory
+        zip_buffer = io.BytesIO()
+        project_root = Path(__file__).parent
+        
+        # Files to include (exclude cache, logs, database)
+        exclude_patterns = {
+            "__pycache__",
+            "*.pyc",
+            "*.log",
+            "*.pid",
+            "*.db",
+            ".git",
+            "data/last_scan.json"
+        }
+        
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            for root, dirs, files in os.walk(project_root):
+                # Skip excluded directories
+                dirs[:] = [d for d in dirs if d not in {"__pycache__", ".git"}]
+                
+                for file in files:
+                    file_path = Path(root) / file
+                    
+                    # Skip excluded files
+                    skip = False
+                    for pattern in exclude_patterns:
+                        if pattern.startswith("*."):
+                            if file.endswith(pattern[1:]):
+                                skip = True
+                                break
+                        elif pattern in str(file_path):
+                            skip = True
+                            break
+                    
+                    if skip:
+                        continue
+                    
+                    # Add file to ZIP with relative path
+                    arc_name = file_path.relative_to(project_root)
+                    zip_file.write(file_path, arc_name)
+        
+        zip_buffer.seek(0)
+        
+        return StreamingResponse(
+            zip_buffer,
+            media_type="application/zip",
+            headers={"Content-Disposition": "attachment; filename=coin-screener-code.zip"}
+        )
+    except Exception as e:
+        logger.error(f"Export Code Error: {e}")
+        return {"ok": False, "error": str(e)}
+
+
+@app.get("/api/export/signals")
+async def export_signals():
+    """
+    Export signals history as CSV file.
+    """
+    try:
+        signals = engine.get_signals_history(limit=1000)
+        
+        # Create CSV content
+        csv_lines = ["symbol,signal,entry_price,sl_price,tp_price,result,exit_price,exit_reason,confidence,scan_date"]
+        for s in signals:
+            row = f"{s.get('symbol','')},{s.get('signal','')},{s.get('entry_price','')},{s.get('sl_price','')},{s.get('tp_price','')},{s.get('result','')},{s.get('exit_price','')},{s.get('exit_reason','')},{s.get('confidence','')},{s.get('scan_date','')}"
+            csv_lines.append(row)
+        
+        csv_content = "\n".join(csv_lines)
+        
+        return StreamingResponse(
+            iter([csv_content]),
+            media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=signals-history.csv"}
+        )
+    except Exception as e:
+        logger.error(f"Export Signals Error: {e}")
+        return {"ok": False, "error": str(e)}
 
 
 # ---- Dashboard Route (FIXED) ----
