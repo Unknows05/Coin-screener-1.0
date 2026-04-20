@@ -239,6 +239,40 @@ async def get_rl_report():
         return {"ok": False, "error": str(e)}
 
 
+@app.get("/api/risk/status")
+async def get_risk_status():
+    """
+    Get comprehensive risk management status.
+    Returns circuit breaker status, overfitting checks, and risk metrics.
+    """
+    try:
+        from src.risk_manager import get_risk_manager
+        rm = get_risk_manager()
+        report = rm.get_status_report()
+        return {"ok": True, "risk_status": report}
+    except Exception as e:
+        logger.error(f"Risk Status API Error: {e}")
+        return {"ok": False, "error": str(e)}
+
+
+@app.post("/api/risk/reset")
+async def reset_circuit_breaker(manual: bool = True):
+    """
+    Reset circuit breaker (requires authentication in production).
+    """
+    try:
+        from src.risk_manager import get_risk_manager
+        rm = get_risk_manager()
+        success = rm.black_swan_protector.reset_circuit_breaker(manual=manual)
+        if success:
+            return {"ok": True, "message": "Circuit breaker reset successfully"}
+        else:
+            return {"ok": False, "error": "Could not reset circuit breaker - cooldown period active"}
+    except Exception as e:
+        logger.error(f"Risk Reset API Error: {e}")
+        return {"ok": False, "error": str(e)}
+
+
 @app.get("/api/signals/history")
 async def get_signals_history(limit: int = 100):
     """

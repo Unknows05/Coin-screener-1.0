@@ -24,6 +24,7 @@ from src.regime import RegimeDetector
 from src.utils import is_leveraged_token
 from src.adaptive_rl import get_optimizer, AdaptiveSignalOptimizer
 from src.enhanced_data import get_enhanced_data, EnhancedFuturesData
+from src.risk_manager import get_risk_manager, RiskManager, RiskConfig
 
 logger = logging.getLogger(__name__)
 
@@ -67,11 +68,12 @@ class ScreeningEngine:
         # Discovered symbols (auto-discover from Binance)
         self._discovered_symbols: list[str] = []
 
-        # Database + Alerter + RL Optimizer + Enhanced Data
+        # Database + Alerter + RL Optimizer + Enhanced Data + Risk Manager
         self.db = ScreenerDB(str(self.cache_dir / "screener.db"))
         self.alerter = SignalAlerter()
         self.rl_optimizer: AdaptiveSignalOptimizer = get_optimizer(str(self.cache_dir / "screener.db"))
         self.enhanced_data: EnhancedFuturesData = get_enhanced_data(str(self.cache_dir / "enhanced_cache"))
+        self.risk_manager: RiskManager = get_risk_manager(RiskConfig(), str(self.cache_dir / "screener.db"))
         # Bounded deque to prevent memory leak - keeps last 100 alerts
         self._last_alerts: deque[dict] = deque(maxlen=100)
 
@@ -253,6 +255,39 @@ class ScreeningEngine:
                         **score_result
                     }
                     signal_result = generate_signal(coin_data, self.config)
+                    
+                    # Risk Management Check (for active signals only)
+                    if signal_result.get("signal") in ("LONG", "SHORT"):
+                        risk_check = self.risk_manager.can_trade(
+                            {
+                                "symbol": symbol,
+                                "signal": signal_result["signal"],
+                                "confidence": signal_result.get("confidence", 50),
+                                "regime": regime_type,
+                                "price": price,
+                                "sl": signal_result.get("sl"),
+                                "tp": signal_result.get("tp")
+                            },
+                            market_data={}  # Could pass enhanced metrics here
+                        )
+                        
+                        # Add risk info to signal
+                        signal_result["risk_check"] = risk_check
+                        signal_result["risk_score"] = risk_check.get("risk_score", 0)
+                        
+                        # Log warnings
+                        if risk_check.get("warnings"):
+                            for warning in risk_check["warnings"]:
+                                if warning:
+                                    logger.warning(f"[Risk] {symbol}: {warning}")
+                        
+                        # If trading not allowed, downgrade to WAIT
+                        if not risk_check.get("allowed", True):
+                            logger.warning(f"[Risk] {symbol}: Trade blocked - {risk_check.get('reason', 'Unknown')}")
+                            signal_result["signal"] = "WAIT"
+                            signal_result["risk_blocked"] = True
+                            signal_result["risk_reason"] = risk_check.get("reason", "Risk check failed")
+                    
                     results.append(signal_result)
 
             elapsed = time.time() - start_time
