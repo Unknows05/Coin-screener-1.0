@@ -22,6 +22,8 @@ from src.database import ScreenerDB
 from src.alerter import SignalAlerter
 from src.regime import RegimeDetector
 from src.utils import is_leveraged_token
+from src.adaptive_rl import get_optimizer, AdaptiveSignalOptimizer
+from src.enhanced_data import get_enhanced_data, EnhancedFuturesData
 
 logger = logging.getLogger(__name__)
 
@@ -65,15 +67,17 @@ class ScreeningEngine:
         # Discovered symbols (auto-discover from Binance)
         self._discovered_symbols: list[str] = []
 
-        # Database + Alerter
+        # Database + Alerter + RL Optimizer + Enhanced Data
         self.db = ScreenerDB(str(self.cache_dir / "screener.db"))
         self.alerter = SignalAlerter()
+        self.rl_optimizer: AdaptiveSignalOptimizer = get_optimizer(str(self.cache_dir / "screener.db"))
+        self.enhanced_data: EnhancedFuturesData = get_enhanced_data(str(self.cache_dir / "enhanced_cache"))
         # Bounded deque to prevent memory leak - keeps last 100 alerts
         self._last_alerts: deque[dict] = deque(maxlen=100)
 
         logger.info(
             f"[Engine] Initialized: {len(self.symbols)} config symbols, "
-            f"auto_discover={self.auto_discover}, timeframes: {self.timeframes}"
+            f"auto_discover={self.auto_discover}, timeframes: {self.timeframes}, RL=enabled"
         )
 
     # ---- Lazy initialization ----
@@ -207,9 +211,6 @@ class ScreeningEngine:
                     if price == 0 and klines_by_tf.get("15m"):
                         price = klines_by_tf["15m"][-1]["close"]
 
-                    # Score
-                    score_result = self.scorer.score_coin(klines_by_tf)
-
                     # Detect regime using 15m data
                     regime = {"regime": "SIDEWAYS"}
                     if klines_by_tf.get("15m"):
@@ -219,6 +220,29 @@ class ScreeningEngine:
                                 regime = self.regime_detector.detect(regime_df)
                         except Exception as e:
                             logger.warning(f"[Engine] Regime detection failed for {symbol}: {e}")
+                    
+                    # Get enhanced market microstructure data (L/S ratio, funding, OI, etc.)
+                    enhanced_metrics = None
+                    try:
+                        # Only fetch for top 10 liquid coins to save API calls
+                        top_symbols = set(self.config.get("symbols", [])[:10])
+                        if symbol in top_symbols:
+                            enhanced_metrics = self.enhanced_data.get_enhanced_metrics(symbol)
+                            if enhanced_metrics and enhanced_metrics.get("compositeSignals"):
+                                logger.debug(f"[Engine] Enhanced signals for {symbol}: {enhanced_metrics['compositeSignals']}")
+                    except Exception as e:
+                        logger.debug(f"[Engine] Enhanced data fetch failed for {symbol}: {e}")
+                    
+                    # Get adaptive RL weights for this regime
+                    regime_type = regime.get("regime", "SIDEWAYS") if isinstance(regime, dict) else str(regime)
+                    adaptive_params = {}
+                    try:
+                        adaptive_params = self.rl_optimizer.get_recommended_params(regime_type)
+                    except Exception:
+                        pass  # RL not available, use defaults
+                    
+                    # Score with adaptive RL parameters + enhanced metrics
+                    score_result = self.scorer.score_coin(klines_by_tf, regime_type, adaptive_params, enhanced_metrics)
 
                     # Generate signal
                     coin_data = {
@@ -279,8 +303,17 @@ class ScreeningEngine:
                 self._last_alerts = alerts
                 if alerts:
                     logger.info(f"[Engine] {len(alerts)} signal alerts detected")
+                
+                # 4. RL: Update adaptive weights based on recent outcomes
+                try:
+                    rl_updates = self.rl_optimizer.update_weights()
+                    if rl_updates:
+                        logger.info(f"[Engine] RL: Updated weights for {len(rl_updates)} regimes")
+                except Exception as rl_err:
+                    logger.debug(f"[Engine] RL update skipped: {rl_err}")
+                    
             except Exception as e:
-                logger.warning(f"[Engine] DB/Alert error: {e}")
+                logger.warning(f"[Engine] DB/Alert/RL error: {e}")
 
             logger.info(
                 f"[Engine] Scan complete: {len(results)} coins, "

@@ -30,6 +30,7 @@
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
 .cal-day{font-size:10px;padding:4px;border-radius:4px;color:var(--tx2);position:relative;cursor:pointer}
 .cal-day:hover{background:var(--sf2)}
+.cal-day.selected{background:var(--acc);color:#000;font-weight:600}
 .cal-day.profit{color:var(--grn);background:rgba(14,203,129,.1)}.cal-day.loss{color:var(--red);background:rgba(246,70,93,.1)}
 .cal-tooltip{display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:var(--sf2);border:1px solid var(--bd);padding:8px;border-radius:6px;font-size:10px;white-space:nowrap;z-index:10;pointer-events:none}
 .cal-day:hover .cal-tooltip{display:block}
@@ -55,8 +56,145 @@
 .modal-box h3{font-size:18px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--bd)}
 .dg{display:grid;grid-template-columns:1fr 1fr;gap:8px}.di{background:var(--sf2);padding:10px;border-radius:8px}.di .l{font-size:10px;color:var(--tx2)}.di .v{font-size:13px;font-weight:600;margin-top:2px}
 
+/* ── Alerts Grid (Flexible) ───────────────────────────────── */
+.alerts-grid{display:flex;flex-wrap:wrap;gap:12px}.alerts-grid>.alert-panel{flex:1 1 320px;min-width:280px;max-width:1fr}
+
+/* ── History View Redesigned Styles ───────────────────────────── */
+.stats-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px}
+.stat-card{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:16px;position:relative;overflow:hidden;transition:transform .2s,border-color .2s}
+.stat-card:hover{transform:translateY(-2px);border-color:var(--tx2)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:3px;background:var(--tx2)}
+.stat-card.profit::before{background:var(--grn)}
+.stat-card.loss::before{background:var(--red)}
+.stat-card.neutral::before{background:var(--acc)}
+.stat-card.profit{background:linear-gradient(180deg,var(--sf) 0%,rgba(14,203,129,0.05) 100%)}
+.stat-card.loss{background:linear-gradient(180deg,var(--sf) 0%,rgba(246,70,93,0.05) 100%)}
+.stat-label{font-size:11px;color:var(--tx2);margin-bottom:6px;font-weight:500}
+.stat-value{font-size:24px;font-weight:700;color:var(--tx);margin-bottom:4px}
+.stat-card.profit .stat-value{color:var(--grn)}
+.stat-card.loss .stat-value{color:var(--red)}
+.stat-card.neutral .stat-value{color:var(--acc)}
+.stat-sub{font-size:10px;color:var(--tx2)}
+
+.history-grid-main{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:20px}
+.history-charts-col{display:flex;flex-direction:column;gap:16px}
+.chart-container{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:16px;position:relative}
+.chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.chart-header h3{font-size:13px;font-weight:600;color:var(--tx);margin:0}
+.chart-badge{font-size:10px;padding:4px 10px;border-radius:20px;background:var(--sf2);color:var(--acc);font-weight:600;border:1px solid var(--bd)}
+.chart-badge.green{background:rgba(14,203,129,0.1);color:var(--grn);border-color:rgba(14,203,129,0.3)}
+.chart-wrapper{position:relative;height:180px}
+
+.history-calendar-col{height:100%}
+.calendar-panel{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:16px;height:100%;display:flex;flex-direction:column}
+.cal-header-modern{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--bd)}
+.cal-nav-btn{background:var(--sf2);border:1px solid var(--bd);color:var(--tx);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:12px;transition:.2s;display:flex;align-items:center;justify-content:center}
+.cal-nav-btn:hover{background:var(--bd);border-color:var(--tx2)}
+.cal-title{display:flex;flex-direction:column;align-items:center}
+.cal-month{font-size:16px;font-weight:700;color:var(--tx)}
+.cal-year{font-size:11px;color:var(--tx2);margin-top:2px}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:8px}
+.cal-weekdays div{text-align:center;font-size:10px;font-weight:600;color:var(--tx2);text-transform:uppercase;padding:6px 0}
+.cal-grid-modern{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;flex:1}
+.cal-day-modern{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;cursor:pointer;position:relative;transition:.2s;border:1px solid transparent;background:var(--sf2);min-height:45px}
+.cal-day-modern:hover{border-color:var(--bd);transform:scale(1.05);z-index:2}
+.cal-day-modern.empty{background:transparent;cursor:default}
+.cal-day-modern.empty:hover{border-color:transparent;transform:none}
+.cal-day-modern .day-num{font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:2px}
+.cal-day-modern .day-stat{font-size:9px;font-weight:600}
+.cal-day-modern.win{background:rgba(14,203,129,0.1);border-color:rgba(14,203,129,0.2)}
+.cal-day-modern.win .day-stat{color:var(--grn)}
+.cal-day-modern.loss{background:rgba(246,70,93,0.1);border-color:rgba(246,70,93,0.2)}
+.cal-day-modern.loss .day-stat{color:var(--red)}
+.cal-day-modern.selected{background:var(--acc);border-color:var(--acc)}
+.cal-day-modern.selected .day-num{color:#000}
+.cal-day-modern.selected .day-stat{color:#000}
+.cal-legend{display:flex;gap:16px;margin-top:12px;padding-top:12px;border-top:1px solid var(--bd);justify-content:center}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--tx2)}
+.legend-dot{width:8px;height:8px;border-radius:50%}
+.legend-dot.win{background:var(--grn)}
+.legend-dot.loss{background:var(--red)}
+.legend-dot.neutral{background:var(--sf2);border:1px solid var(--bd)}
+.cal-tooltip-modern{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:10px;min-width:140px;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.4)}
+.cal-day-modern:hover .cal-tooltip-modern{display:block}
+.cal-tooltip-modern::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--sf2)}
+.cal-tooltip-modern .tt-date{font-size:10px;font-weight:600;color:var(--tx);margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--bd)}
+.cal-tooltip-modern .tt-row{display:flex;justify-content:space-between;font-size:10px;margin:3px 0}
+.cal-tooltip-modern .tt-row span:first-child{color:var(--tx2)}
+.cal-tooltip-modern .tt-row span:last-child{font-weight:600}
+.cal-tooltip-modern .tt-wr{color:var(--grn)}
+.cal-tooltip-modern .tt-wr.negative{color:var(--red)}
+
+.signal-history-section{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:0;overflow:hidden}
+.section-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--bd);background:linear-gradient(90deg,var(--sf) 0%,rgba(240,185,11,0.03) 100%)}
+.section-title{display:flex;align-items:center;gap:10px}
+.title-icon{font-size:18px}
+.section-title h3{font-size:14px;font-weight:600;color:var(--tx);margin:0}
+.title-badge{font-size:10px;padding:3px 10px;border-radius:20px;background:var(--sf2);color:var(--tx2);font-weight:500;border:1px solid var(--bd)}
+.section-filters{display:flex;gap:8px}
+.filter-btn{padding:6px 14px;border:1px solid var(--bd);border-radius:20px;background:transparent;color:var(--tx2);cursor:pointer;font-size:11px;font-weight:500;transition:.2s}
+.filter-btn:hover{border-color:var(--tx2);color:var(--tx)}
+.filter-btn.active{background:var(--acc);color:#000;border-color:var(--acc);font-weight:600}
+.history-summary{padding:12px 20px;font-size:12px;color:var(--tx2);background:var(--sf2);border-bottom:1px solid var(--bd)}
+.history-summary b{color:var(--tx)}
+.history-summary .clear-filter{cursor:pointer;color:var(--red);margin-left:8px;font-size:11px}
+.history-summary .clear-filter:hover{text-decoration:underline}
+.history-table-container{max-height:400px;overflow-y:auto;padding:0}
+.history-table-container table{font-size:11px;width:100%}
+.history-table-container th{padding:12px 16px;font-size:10px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:0.5px;background:var(--sf);border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:10}
+.history-table-container td{padding:12px 16px;border-bottom:1px solid var(--bd);transition:background .15s}
+.history-table-container tr:hover td{background:var(--sf2)}
+.history-table-container .coin-cell{display:flex;align-items:center;gap:10px}
+.history-table-container .coin-icon{width:28px;height:28px;border-radius:50%;background:var(--sf2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--acc)}
+.history-table-container .coin-info{line-height:1.3}
+.history-table-container .coin-name{font-weight:600;color:var(--tx)}
+.history-table-container .coin-meta{font-size:9px;color:var(--tx2)}
+.history-table-container .signal-badge{display:inline-block;padding:3px 10px;border-radius:6px;font-size:10px;font-weight:600;text-transform:uppercase}
+.history-table-container .signal-badge.long{background:rgba(14,203,129,0.15);color:var(--grn)}
+.history-table-container .signal-badge.short{background:rgba(246,70,93,0.15);color:var(--red)}
+.history-table-container .price-cell{line-height:1.4}
+.history-table-container .price-main{font-weight:600;color:var(--tx)}
+.history-table-container .price-sub{font-size:9px;color:var(--tx2)}
+.history-table-container .sl-tp-cell{line-height:1.4}
+.history-table-container .sl-val{color:var(--red);font-weight:600;font-size:11px}
+.history-table-container .tp-val{color:var(--grn);font-weight:600;font-size:11px}
+.history-table-container .sl-tp-sub{font-size:9px;color:var(--tx2);margin-top:1px}
+.history-table-container .result-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:600}
+.history-table-container .result-badge.win{background:rgba(14,203,129,0.15);color:var(--grn)}
+.history-table-container .result-badge.loss{background:rgba(246,70,93,0.15);color:var(--red)}
+.history-table-container .result-badge.open{background:rgba(240,185,11,0.15);color:var(--acc)}
+.history-table-container .pnl-cell{font-weight:600;font-size:11px}
+.history-table-container .pnl-cell.positive{color:var(--grn)}
+.history-table-container .pnl-cell.negative{color:var(--red)}
+.history-table-container .pnl-cell.neutral{color:var(--tx2)}
+
+/* ── RL Panel Styles ─────────────────────────────────────────── */
+.rl-panel{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:16px;margin-bottom:20px;overflow:hidden}
+.rl-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--bd)}
+.rl-title{display:flex;align-items:center;gap:10px}
+.rl-title h3{font-size:14px;font-weight:600;color:var(--tx);margin:0}
+.rl-badge{font-size:10px;padding:3px 10px;border-radius:20px;background:rgba(240,185,11,0.15);color:var(--acc);font-weight:600;border:1px solid var(--acc)}
+.rl-metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px}
+.rl-metric-card{background:var(--sf2);border-radius:10px;padding:12px;border:1px solid var(--bd)}
+.rl-metric-title{font-size:11px;color:var(--tx2);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
+.rl-metric-value{font-size:20px;font-weight:700;color:var(--tx)}
+.rl-metric-value.positive{color:var(--grn)}
+.rl-metric-value.negative{color:var(--red)}
+.rl-metric-sub{font-size:10px;color:var(--tx2);margin-top:4px}
+.rl-recommendations{background:var(--sf2);border-radius:10px;padding:12px;border:1px solid var(--bd);border-left:3px solid var(--acc)}
+.rl-rec-title{font-size:12px;font-weight:600;color:var(--acc);margin-bottom:8px}
+.rl-rec-list{font-size:11px;color:var(--tx2);line-height:1.6}
+.rl-rec-list li{margin-bottom:4px;margin-left:16px}
+.rl-weights-bar{display:flex;height:8px;background:var(--bd);border-radius:4px;overflow:hidden;margin-top:6px}
+.rl-weight-seg{height:100%;transition:width 0.3s}
+.rl-weight-legend{display:flex;gap:12px;margin-top:8px;font-size:9px;color:var(--tx2);flex-wrap:wrap}
+.rl-legend-item{display:flex;align-items:center;gap:4px}
+.rl-dot{width:8px;height:8px;border-radius:2px}
+
 /* ── Responsive ───────────────────────────────────────────── */
-@media(max-width:900px){.sidebar{width:70px}.sidebar .txt{display:none}.main{margin-left:70px}.cards{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){.sidebar{display:none}.main{margin-left:0}.cards{grid-template-columns:1fr}.grid-charts{grid-template-columns:1fr}}
+@media(max-width:1200px){.stats-grid{grid-template-columns:repeat(3,1fr)}.history-grid-main{grid-template-columns:1fr}}
+@media(max-width:900px){.sidebar{width:70px}.sidebar .txt{display:none}.main{margin-left:70px}.cards{grid-template-columns:repeat(2,1fr)}.stats-grid{grid-template-columns:repeat(3,1fr)}.history-grid-main{grid-template-columns:1fr}.section-header{flex-direction:column;gap:12px;align-items:flex-start}}
+@media(max-width:600px){.sidebar{display:none}.main{margin-left:0}.cards{grid-template-columns:1fr}.grid-charts{grid-template-columns:1fr}.stats-grid{grid-template-columns:repeat(2,1fr)}.alerts-grid>.alert-panel{flex:1 1 100%;min-width:100%}.section-filters{flex-wrap:wrap;width:100%}.filter-btn{flex:1;min-width:80px}}
 </style>
 </head>
 <body>
@@ -83,6 +221,33 @@
         <button class="fbtn a" data-s="all" onclick="setSector('all')">All</button><button class="fbtn" data-s="volatile" onclick="setSector('volatile')">🔥 Volatile</button><button class="fbtn" data-s="majors" onclick="setSector('majors')">Majors</button><button class="fbtn" data-s="l1" onclick="setSector('l1')">L1 / L2</button><button class="fbtn" data-s="defi" onclick="setSector('defi')">DeFi</button><button class="fbtn" data-s="ai" onclick="setSector('ai')">AI</button><button class="fbtn" data-s="memes" onclick="setSector('memes')">Memes</button><button class="fbtn" data-s="new" onclick="setSector('new')">New / RWA</button>
       </div>
       
+      <!-- Liquidation Heatmap Panel - MOVED TO TOP -->
+      <div class="card" style="margin-bottom:16px;padding:16px" id="liquidation-panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div class="title" style="display:flex;align-items:center;gap:6px">
+            🔥 Liquidation Heatmap
+            <span id="liq-updated" style="font-size:10px;color:var(--tx2);font-weight:400"></span>
+          </div>
+          <button class="btn-sm" onclick="refreshLiquidations()" id="liq-refresh-btn">🔄 Refresh</button>
+        </div>
+        
+        <!-- Notes Section - How to Read -->
+        <div style="background:var(--sf2);border-radius:6px;padding:12px;margin-bottom:12px;border-left:3px solid var(--acc)">
+          <div style="font-size:11px;font-weight:600;color:var(--tx);margin-bottom:8px">📝 Cara Membaca Data Liquidation</div>
+          <ul style="font-size:10px;color:var(--tx2);margin:0;padding-left:16px;line-height:1.8">
+            <li><b>Total Liq</b>: Total nilai liquidasi dalam24h — semakin tinggi = semakin banyak posisi yang terlikuidasi</li>
+            <li><b>Long Liq</b>: Nilai liquidasi posisi LONG — dominan = banyak long trader terstop loss</li>
+            <li><b>Short Liq</b>: Nilai liquidasi posisi SHORT — dominan = banyak short trader terstop loss</li>
+            <li><b>L/S %</b>: Rasio Long vs Short liquidation —100% = semua long, 0% = semua short</li>
+            <li><b>Level 🔴🟡</b>: Intensitas liquidasi — 🔴 High (>10M), 🟡 Medium (1-10M), ⚪ Low (&lt;1M)</li>
+          </ul>
+        </div>
+        
+        <div id="liquidation-content">
+          <div style="color:var(--tx2);text-align:center;padding:20px">Loading liquidation data...</div>
+        </div>
+      </div>
+      
       <!-- Scanner Table -->
       <div class="tbl-wrap" id="scanner-table-wrap">
         <table><thead><tr><th>Coin</th><th>Price</th><th>Signal</th><th>Confidence</th><th>SL</th><th>TP</th><th>Regime</th><th>Actions</th></tr></thead><tbody id="sig-body"></tbody></table>
@@ -92,45 +257,149 @@
       <div class="tbl-wrap" id="volatile-table-wrap" style="display:none">
         <table><thead><tr><th>Coin</th><th>Price</th><th>Change (24h)</th><th>Volume (24h)</th><th>Action</th></tr></thead><tbody id="volatile-body"></tbody></table>
       </div>
-      
-      <!-- Liquidation Heatmap Panel -->
-      <div class="card" style="margin-top:16px;padding:16px" id="liquidation-panel">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <div class="title" style="display:flex;align-items:center;gap:6px">
-            🔥 Liquidation Heatmap
-            <span id="liq-updated" style="font-size:10px;color:var(--tx2);font-weight:400"></span>
-          </div>
-          <button class="btn-sm" onclick="refreshLiquidations()" id="liq-refresh-btn">🔄 Refresh</button>
-        </div>
-        <div id="liquidation-content">
-          <div style="color:var(--tx2);text-align:center;padding:20px">Loading liquidation data...</div>
-        </div>
-      </div>
     </div>
 
-    <!-- History View (Charts + Compact Calendar) -->
+    <!-- History View (Redesigned - Binance Style) -->
     <div id="v-history" class="view">
-      <div class="grid-charts">
-        <!-- Main Charts -->
-        <div>
-          <div class="chart-box" style="margin-bottom:12px"><h3>Cumulative Signal Performance</h3><canvas id="chart-pnl" height="150"></canvas></div>
-          <div class="chart-box"><h3>Daily Win Rate %</h3><canvas id="chart-wr" height="150"></canvas></div>
+      <!-- Stats Cards Row -->
+      <div class="stats-grid" id="history-stats-cards">
+        <div class="stat-card profit">
+          <div class="stat-label">✅ TP Hits (Wins)</div>
+          <div class="stat-value" id="stat-wins">—</div>
+          <div class="stat-sub">Profitable trades</div>
         </div>
-        <!-- Compact Calendar -->
-        <div class="cal-compact">
-          <div class="cal-header">
-            <button class="cal-nav" onclick="changeMonth(-1)">◀</button>
-            <span id="cal-month-title">2026-04</span>
-            <button class="cal-nav" onclick="changeMonth(1)">▶</button>
+        <div class="stat-card loss">
+          <div class="stat-label">❌ SL Hits (Losses)</div>
+          <div class="stat-value" id="stat-losses">—</div>
+          <div class="stat-sub">Stopped out trades</div>
+        </div>
+        <div class="stat-card neutral">
+          <div class="stat-label">⏳ Open Positions</div>
+          <div class="stat-value" id="stat-open">—</div>
+          <div class="stat-sub">Active signals</div>
+        </div>
+        <div class="stat-card neutral">
+          <div class="stat-label">📊 Win Rate</div>
+          <div class="stat-value" id="stat-winrate">—</div>
+          <div class="stat-sub">Overall performance</div>
+        </div>
+        <div class="stat-card profit">
+          <div class="stat-label">🔥 Best Day</div>
+          <div class="stat-value" id="stat-best">—</div>
+          <div class="stat-sub">Highest wins</div>
+        </div>
+        <div class="stat-card loss">
+          <div class="stat-label">📉 Worst Day</div>
+          <div class="stat-value" id="stat-worst">—</div>
+          <div class="stat-sub">Most losses</div>
+        </div>
+      </div>
+
+      <!-- RL Performance Panel -->
+      <div class="rl-panel" id="rl-panel" style="display:none">
+        <div class="rl-header">
+          <div class="rl-title">
+            <span>🤖</span>
+            <h3>Adaptive Learning Insights</h3>
+            <span class="rl-badge" id="rl-status">Analyzing...</span>
           </div>
-          <div class="cal-grid" id="cal-grid"></div>
+          <button class="btn-sm" onclick="loadRLData()">🔄 Refresh RL</button>
         </div>
+        <div class="rl-content" id="rl-content">
+          <div class="rl-metrics-grid" id="rl-metrics">
+            <!-- Dynamically populated -->
+          </div>
+          <div class="rl-recommendations" id="rl-recommendations">
+            <!-- Recommendations -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content Grid -->
+      <div class="history-grid-main">
+        <!-- Left Column: Charts -->
+        <div class="history-charts-col">
+          <div class="chart-container">
+            <div class="chart-header">
+              <h3>📈 Cumulative Performance Score</h3>
+              <div class="chart-badge">Daily PNL</div>
+            </div>
+            <div class="chart-wrapper">
+              <canvas id="chart-pnl" height="180"></canvas>
+            </div>
+          </div>
+          <div class="chart-container">
+            <div class="chart-header">
+              <h3>🎯 Daily Win Rate Trend</h3>
+              <div class="chart-badge green">% Accuracy</div>
+            </div>
+            <div class="chart-wrapper">
+              <canvas id="chart-wr" height="180"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Calendar -->
+        <div class="history-calendar-col">
+          <div class="calendar-panel">
+            <div class="cal-header-modern">
+              <button class="cal-nav-btn" onclick="changeMonth(-1)">◀</button>
+              <div class="cal-title">
+                <span class="cal-month" id="cal-month-title">April 2026</span>
+                <span class="cal-year" id="cal-year-title">2026</span>
+              </div>
+              <button class="cal-nav-btn" onclick="changeMonth(1)">▶</button>
+            </div>
+            
+            <!-- Calendar Grid -->
+            <div class="cal-weekdays">
+              <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div>
+              <div>Thu</div><div>Fri</div><div>Sat</div>
+            </div>
+            <div class="cal-grid-modern" id="cal-grid"></div>
+            
+            <!-- Calendar Legend -->
+            <div class="cal-legend">
+              <div class="legend-item">
+                <div class="legend-dot win"></div>
+                <span>Win Day (≥50% WR)</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-dot loss"></div>
+                <span>Loss Day (&lt;50% WR)</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-dot neutral"></div>
+                <span>No Signals</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Signal History Section -->
+      <div class="signal-history-section" id="signal-history-container">
+        <div class="section-header">
+          <div class="section-title">
+            <span class="title-icon">📋</span>
+            <h3>Signal History</h3>
+            <span class="title-badge" id="history-count">0 trades</span>
+          </div>
+          <div class="section-filters" id="history-filter">
+            <button class="filter-btn active" onclick="filterHistory('all',this)" data-hf="all">All</button>
+            <button class="filter-btn" onclick="filterHistory('win',this)" data-hf="win">✅ TP Hit</button>
+            <button class="filter-btn" onclick="filterHistory('loss',this)" data-hf="loss">❌ SL Hit</button>
+            <button class="filter-btn" onclick="filterHistory('open',this)" data-hf="open">⏳ Open</button>
+          </div>
+        </div>
+        <div class="history-summary" id="history-stats"></div>
+        <div class="history-table-container" id="history-grid"></div>
       </div>
     </div>
 
     <!-- Alerts View (3 Sections: Recent, High Confidence, Near Entry) -->
     <div id="v-alerts" class="view">
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;height:calc(100vh - 140px)">
+      <div class="alerts-grid">
         <!-- Recent Signals -->
         <div class="alert-panel" style="display:flex;flex-direction:column">
           <div class="panel-head">
@@ -190,7 +459,7 @@
 </div>
 
 <script>
-var DATA=[],TICKER={},SECTOR='all',SORT='cd',CAL_Y=new Date().getFullYear(),CAL_M=new Date().getMonth()+1;
+var DATA=[],TICKER={},SECTOR='all',SORT='cd',CAL_Y=new Date().getFullYear(),CAL_M=new Date().getMonth()+1,SELECTED_DATE=null;
 const MAP={'BTCUSDT':'majors','ETHUSDT':'majors','BNBUSDT':'majors','SOLUSDT':'majors','XRPUSDT':'majors','ADAUSDT':'l1','AVAXUSDT':'l1','DOTUSDT':'l1','ATOMUSDT':'l1','NEARUSDT':'l1','FILUSDT':'l1','STXUSDT':'l1','ARBUSDT':'l1','OPUSDT':'l1','LINKUSDT':'defi','UNIUSDT':'defi','AAVEUSDT':'defi','FETUSDT':'ai','RENDERUSDT':'ai','INJUSDT':'ai','DOGEUSDT':'memes','1000PEPEUSDT':'memes','WIFUSDT':'memes','1000FLOKIUSDT':'memes','SUIUSDT':'new','SEIUSDT':'new','APTUSDT':'new','TIAUSDT':'new','ONDOUSDT':'new','ORDIUSDT':'new'};
 function $(id){return document.getElementById(id)}
 function fp(v){if(v==null)return'—';if(v>=1e4)return'$'+v.toLocaleString('en-US',{maximumFractionDigits:0});if(v>=1e3)return'$'+v.toLocaleString('en-US',{maximumFractionDigits:0});if(v>=1)return'$'+v.toFixed(2);if(v>=.01)return'$'+v.toFixed(4);return'$'+v.toFixed(6)}
@@ -263,32 +532,118 @@ async function deepScan(sym){
 function closeModal(){$('modal').classList.remove('s')}
 function setSector(s){SECTOR=s;document.querySelectorAll('.fbtn').forEach(b=>b.classList.toggle('a',b.dataset.s===s));render()}
 
-// History & Calendar
+// History & Calendar (Redesigned)
 async function loadHistory(){
-    $('cal-month-title').textContent=CAL_Y+'-'+(CAL_M<10?'0':'')+CAL_M;
+    console.log('[History] Loading data for', CAL_Y, CAL_M);
+    
+    // Update calendar title with month name
+    var monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    if($('cal-month-title')) $('cal-month-title').textContent=monthNames[CAL_M-1];
+    if($('cal-year-title')) $('cal-year-title').textContent=CAL_Y;
+    
     try{
-        var res=await api('/api/calendar/'+CAL_Y+'/'+CAL_M);
-        var days=res.calendar||[];var map={};
+        // Load calendar data and db stats in parallel
+        var [res,dbStats]=await Promise.all([
+            api('/api/calendar/'+CAL_Y+'/'+CAL_M),
+            api('/api/db/stats').catch(()=>null)
+        ]);
+        
+        console.log('[History] Calendar data:', res);
+        console.log('[History] DB stats:', dbStats);
+        
+        var days=res.calendar||[];
+        var map={};
         days.forEach(d=>map[d.scan_date]=d);
         
-        // Render Calendar with Tooltips
-        var fd=new Date(CAL_Y,CAL_M-1,1).getDay(),dim=new Date(CAL_Y,CAL_M,0).getDate(),h='';
-        for(var i=0;i<fd;i++)h+='<div></div>';
-        for(var i=1;i<=dim;i++){
-            var k=CAL_Y+'-'+(CAL_M<10?'0':'')+CAL_M+'-'+(i<10?'0':'')+i;var day=map[k];
-            var cls='cal-day';var inner='<div>'+i+'</div>';
-            var tooltip='';
-            if(day){
-                var wr=day.win_rate||0;var val=(wr-50).toFixed(0);var sign=val>0?'+':'';
-                inner='<div>'+i+'</div><div style="font-size:9px">'+sign+val+'%</div>';
-                cls+=wr>=50?' profit':' loss';
-                tooltip=`<div class="cal-tooltip"><b>${k}</b><br>WR: ${wr}%<br>W:${day.wins||0} L:${day.losses||0}</div>`;
-            }else{
-                tooltip=`<div class="cal-tooltip"><b>${k}</b><br>No data</div>`;
-            }
-            h+=`<div class="${cls}">${tooltip}${inner}</div>`;
+        // Update Stats Cards
+        if(dbStats&&dbStats.stats){
+            console.log('[History] Updating stats cards:', dbStats.stats);
+            if($('stat-wins')) $('stat-wins').textContent=dbStats.stats.wins||0;
+            if($('stat-losses')) $('stat-losses').textContent=dbStats.stats.losses||0;
+            if($('stat-winrate')) $('stat-winrate').textContent=(dbStats.stats.win_rate||0)+'%';
         }
-        $('cal-grid').innerHTML=h;
+        
+        // Calculate best and worst day
+        var bestDay={wins:0,losses:0},worstDay={wins:0,losses:0};
+        var maxWins=0,maxLosses=0,totalOpen=0;
+        days.forEach(d=>{
+            if((d.wins||0)>maxWins){maxWins=d.wins;bestDay=d}
+            if((d.losses||0)>maxLosses){maxLosses=d.losses;worstDay=d}
+        });
+        
+        // Get open positions count from signal history
+        try{
+            var histRes=await api('/api/signals/history');
+            var signals=histRes.data||[];
+            totalOpen=signals.filter(s=>s.result==='OPEN'||s.result==='PENDING').length;
+            if($('stat-open')) $('stat-open').textContent=totalOpen;
+            if($('stat-best')) $('stat-best').textContent=bestDay.wins?bestDay.wins+' wins':'—';
+            if($('stat-worst')) $('stat-worst').textContent=worstDay.losses?worstDay.losses+' losses':'—';
+        }catch(e){
+            console.log('[History] Error loading signal history for stats:', e);
+            if($('stat-open')) $('stat-open').textContent='—';
+        }
+        
+        // Render Modern Calendar Grid
+        var fd=new Date(CAL_Y,CAL_M-1,1).getDay(),dim=new Date(CAL_Y,CAL_M,0).getDate(),h='';
+        // Empty slots for days before month starts
+        for(var i=0;i<fd;i++)h+='<div class="cal-day-modern empty"></div>';
+        
+        for(var i=1;i<=dim;i++){
+            var k=CAL_Y+'-'+(CAL_M<10?'0':'')+CAL_M+'-'+(i<10?'0':'')+i;
+            var day=map[k];
+            var cls='cal-day-modern';
+            var dayNum=i;
+            var dayStat='—';
+            var tooltipContent='';
+            
+            if(day){
+                var wr=day.win_rate||0;
+                var total=(day.wins||0)+(day.losses||0);
+                var diff=wr-50;
+                var sign=diff>0?'+':'';
+                dayStat=sign+diff.toFixed(0)+'%';
+                
+                if(wr>=50){
+                    cls+=' win';
+                }else{
+                    cls+=' loss';
+                }
+                
+                // Modern tooltip content
+                tooltipContent=`<div class="cal-tooltip-modern">
+                    <div class="tt-date">${k}</div>
+                    <div class="tt-row"><span>Win Rate:</span><span class="tt-wr ${wr<50?'negative':''}">${wr}%</span></div>
+                    <div class="tt-row"><span>Wins:</span><span style="color:var(--grn)">${day.wins||0}</span></div>
+                    <div class="tt-row"><span>Losses:</span><span style="color:var(--red)">${day.losses||0}</span></div>
+                    <div class="tt-row"><span>Total:</span><span>${total}</span></div>
+                </div>`;
+            }else{
+                tooltipContent=`<div class="cal-tooltip-modern">
+                    <div class="tt-date">${k}</div>
+                    <div style="font-size:10px;color:var(--tx2);text-align:center">No signals</div>
+                </div>`;
+            }
+            
+            // Add selected state
+            if(SELECTED_DATE===k)cls+=' selected';
+            
+            var hasData=day?'true':'false';
+            h+=`<div class="${cls}" onclick="selectDate('${k}',${hasData})">
+                ${tooltipContent}
+                <span class="day-num">${dayNum}</span>
+                <span class="day-stat">${dayStat}</span>
+            </div>`;
+        }
+        
+        // Fill remaining grid to complete 6 rows (42 cells)
+        var totalCells=fd+dim;
+        var remaining=42-totalCells;
+        for(var i=0;i<remaining;i++){
+            h+='<div class="cal-day-modern empty"></div>';
+        }
+        
+        if($('cal-grid')) $('cal-grid').innerHTML=h;
         
         // Render Charts with Real Data
         var chartData=res.chart_data||{labels:[],pnl:[],win_rate:[]};
@@ -296,9 +651,195 @@ async function loadHistory(){
         
         // Load Signal History Grid
         loadSignalHistory();
-    }catch(e){console.error(e);$('cal-grid').innerHTML=''}
+        
+        // Load RL insights
+        loadRLData();
+    }catch(e){
+        console.error('[History] Error loading history:', e);
+        if($('cal-grid')) $('cal-grid').innerHTML='<div style="padding:20px;color:var(--red)">Error loading calendar</div>'
+    }
 }
 function changeMonth(d){CAL_M+=d;if(CAL_M>12){CAL_M=1;CAL_Y++}if(CAL_M<1){CAL_M=12;CAL_Y--}loadHistory()}
+
+// RL (Reinforcement Learning) Data Loading
+async function loadRLData(){
+    console.log('[RL] Loading adaptive learning data...');
+    var panel=$('rl-panel');
+    var content=$('rl-content');
+    var status=$('rl-status');
+    
+    if(panel) panel.style.display='block';
+    if(status) status.textContent='Loading...';
+    
+    try{
+        var res=await api('/api/rl/performance?days=7');
+        console.log('[RL] Data received:', res);
+        
+        if(!res.ok||!res.performance){
+            if(status) status.textContent='No Data';
+            if(content) content.innerHTML='<div style="padding:20px;color:var(--tx2)">No RL data available yet. Need more trade history.</div>';
+            return;
+        }
+        
+        if(status) status.textContent='Active';
+        
+        // Build RL metrics display
+        var perf=res.performance||{};
+        var recs=res.recommendations||{};
+        var weights=res.current_weights||{};
+        
+        var html='<div class="rl-metrics-grid">';
+        
+        // Overall stats
+        var totalTrades=0,totalWins=0,totalExpectancy=0,regimeCount=0;
+        for(var regime in perf){
+            var p=perf[regime];
+            if(p.total_trades){
+                totalTrades+=p.total_trades;
+                totalWins+=p.wins||0;
+                totalExpectancy+=p.expectancy||0;
+                regimeCount++;
+            }
+        }
+        
+        var overallWR=totalTrades>0?((totalWins/totalTrades)*100).toFixed(1):0;
+        var avgExpectancy=regimeCount>0?(totalExpectancy/regimeCount).toFixed(3):0;
+        
+        html+=`<div class="rl-metric-card">
+            <div class="rl-metric-title">Total Trades (7d)</div>
+            <div class="rl-metric-value">${totalTrades}</div>
+        </div>`;
+        
+        html+=`<div class="rl-metric-card">
+            <div class="rl-metric-title">Overall Win Rate</div>
+            <div class="rl-metric-value ${overallWR>=50?'positive':'negative'}">${overallWR}%</div>
+        </div>`;
+        
+        html+=`<div class="rl-metric-card">
+            <div class="rl-metric-title">Avg Expectancy</div>
+            <div class="rl-metric-value ${avgExpectancy>=0?'positive':'negative'}">${avgExpectancy}</div>
+            <div class="rl-metric-sub">Expected return per trade</div>
+        </div>`;
+        
+        // Per-regime breakdown
+        for(var regime in perf){
+            var p=perf[regime];
+            if(p.win_rate){
+                html+=`<div class="rl-metric-card">
+                    <div class="rl-metric-title">${regime} Regime</div>
+                    <div class="rl-metric-value ${p.win_rate>=50?'positive':'negative'}">${p.win_rate}% WR</div>
+                    <div class="rl-metric-sub">${p.total_trades} trades | Kelly: ${(p.kelly_fraction*100).toFixed(2)}%</div>
+                </div>`;
+            }
+        }
+        
+        html+='</div>';
+        
+        // Factor weights visualization
+        html+='<div style="margin-top:16px;padding:12px;background:var(--sf2);border-radius:10px;border:1px solid var(--bd)">';
+        html+='<div style="font-size:11px;color:var(--tx2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Adaptive Factor Weights (by Regime)</div>';
+        
+        var colors=['#f0b90b','#0ecb81','#1e90ff','#f6465d','#848e9c'];
+        var colorIdx=0;
+        
+        for(var reg in weights){
+            if(reg==='DEFAULT')continue;
+            var w=weights[reg];
+            html+=`<div style="margin-bottom:10px">`;
+            html+=`<div style="font-size:10px;color:var(--tx);margin-bottom:4px;font-weight:600">${reg}</div>`;
+            html+=`<div class="rl-weights-bar">`;
+            var totalW=0;
+            for(var factor in w){
+                var pct=(w[factor]*100).toFixed(1);
+                html+=`<div class="rl-weight-seg" style="width:${pct}%;background:${colors[colorIdx%colors.length]}"></div>`;
+                colorIdx++;
+            }
+            html+=`</div>`;
+            html+=`<div class="rl-weight-legend">`;
+            colorIdx=0;
+            for(var factor in w){
+                html+=`<div class="rl-legend-item"><div class="rl-dot" style="background:${colors[colorIdx%colors.length]}"></div><span>${factor}: ${(w[factor]*100).toFixed(0)}%</span></div>`;
+                colorIdx++;
+            }
+            html+=`</div></div>`;
+        }
+        
+        html+='</div>';
+        
+        // Recommendations
+        html+='<div class="rl-recommendations" style="margin-top:16px">';
+        html+='<div class="rl-rec-title">🎯 AI Recommendations</div>';
+        html+='<ul class="rl-rec-list">';
+        
+        // Find best regime
+        var bestRegime='',bestWR=0,bestExp=-999;
+        for(var r in perf){
+            if(perf[r].expectancy>bestExp){
+                bestExp=perf[r].expectancy;
+                bestRegime=r;
+                bestWR=perf[r].win_rate;
+            }
+        }
+        
+        if(bestRegime&&bestExp>0){
+            html+=`<li>✅ <b>Focus on ${bestRegime} regime</b> - Highest expectancy (${bestExp.toFixed(3)}) with ${bestWR}% win rate</li>`;
+        }
+        
+        for(var rg in perf){
+            if(perf[rg].expectancy<0){
+                html+=`<li>⚠️ <b>Avoid ${rg}</b> - Negative expectancy detected (${perf[rg].expectancy.toFixed(3)})</li>`;
+            }
+        }
+        
+        if(totalTrades<20){
+            html+=`<li>⏳ <b>Learning phase</b> - Need at least 20 trades for reliable insights (currently: ${totalTrades})</li>`;
+        }
+        
+        html+='</ul></div>';
+        
+        if(content) content.innerHTML=html;
+        console.log('[RL] Rendered successfully');
+        
+    }catch(e){
+        console.error('[RL] Error:', e);
+        if(status) status.textContent='Error';
+        if(content) content.innerHTML='<div style="padding:20px;color:var(--red)">Failed to load RL data</div>';
+    }
+}
+function selectDate(dateStr,hasDataStr){
+    var hasData=hasDataStr==='true'; // Convert string to boolean
+    console.log('[selectDate] Clicked:', dateStr, 'hasData:', hasData, 'current selected:', SELECTED_DATE);
+    
+    if(!hasData){
+        console.log('[selectDate] No data for this date, ignoring');
+        return; // No data for this date
+    }
+    
+    if(SELECTED_DATE===dateStr){
+        SELECTED_DATE=null; // Deselect
+        console.log('[selectDate] Deselected date');
+    }else{
+        SELECTED_DATE=dateStr; // Select
+        console.log('[selectDate] Selected date:', dateStr);
+    }
+    
+    loadHistory(); // Re-render calendar and signal history
+}
+function clearDateFilter(){
+    console.log('[clearDateFilter] Clearing date filter');
+    SELECTED_DATE=null;
+    loadHistory();
+}
+
+// Helper function to force refresh history table without reloading calendar
+function refreshHistoryTableOnly(){
+    console.log('[refreshHistoryTableOnly] Refreshing only history table');
+    if(window._signalHistory){
+        renderHistoryGrid(window._signalHistory);
+    }else{
+        loadSignalHistory();
+    }
+}
 
 // Signal History Grid - Shows all signals with SL/TP status from database
 async function loadSignalHistory(){
@@ -307,17 +848,8 @@ async function loadSignalHistory(){
         var res=await api('/api/signals/history');
         var signals=res.data||[];
         
-        // Create signal history section if not exists
-        var container=$('signal-history-container');
-        if(!container){
-            container=document.createElement('div');
-            container.id='signal-history-container';
-            container.style.cssText='margin-top:20px;background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:16px;max-height:400px;overflow-y:auto';
-            container.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1px solid var(--bd);padding-bottom:12px"><h3 style="font-size:14px;color:var(--tx2)">📋 Signal History (SL / TP Trades)</h3><div id="history-filter" style="display:flex;gap:8px"><button class="btn-sm a" onclick="filterHistory('all',this)" data-hf="all">All</button><button class="btn-sm" onclick="filterHistory('win',this)" data-hf="win">✅ TP Hit</button><button class="btn-sm" onclick="filterHistory('loss',this)" data-hf="loss">❌ SL Hit</button><button class="btn-sm" onclick="filterHistory('open',this)" data-hf="open">⏳ Open</button></div></div><div id="history-stats" style="font-size:11px;color:var(--tx2);margin-bottom:10px"></div><div id="history-grid"></div>`;
-            $('v-history').appendChild(container);
-        }
-        
-        // Store signals globally for filtering
+        // The container now already exists in the redesigned HTML
+        // Just store signals globally for filtering
         window._signalHistory=signals;
         renderHistoryGrid(signals);
     }catch(e){console.error('History load error:',e)}
@@ -328,82 +860,253 @@ function renderHistoryGrid(signals){
     var filterBtn=document.querySelector('[data-hf].a');
     var filter=filterBtn?filterBtn.dataset.hf:'all';
     
-    // Filter signals based on selection
+    // Filter signals based on result type
     var filtered=signals.filter(s=>{
         if(filter==='all')return true;
         if(filter==='win')return s.result==='WIN';
         if(filter==='loss')return s.result==='LOSS';
-        if(filter==='open')return s.result==='OPEN';
+        if(filter==='open')return s.result==='OPEN'||s.result==='PENDING';
         return true;
     });
     
-    // Update stats
-    var wins=signals.filter(s=>s.result==='WIN').length;
-    var losses=signals.filter(s=>s.result==='LOSS').length;
-    var open=signals.filter(s=>s.result==='OPEN').length;
-    var wr=signals.length>0?((wins/(wins+losses))*100).toFixed(1):0;
-    $('history-stats').innerHTML=`Total: <b>${signals.length}</b> | ✅ TP: <b style="color:var(--grn)">${wins}</b> | ❌ SL: <b style="color:var(--red)">${losses}</b> | ⏳ Open: <b style="color:var(--acc)">${open}</b> | Win Rate: <b>${wr}%</b>`;
+    // Filter by selected date if set
+    if(SELECTED_DATE){
+        console.log('[renderHistoryGrid] Filtering by date:', SELECTED_DATE);
+        filtered=filtered.filter(s=>{
+            var sigDate=s.timestamp?s.timestamp.split('T')[0]:null;
+            var match=sigDate===SELECTED_DATE;
+            console.log('[renderHistoryGrid] Checking signal date:', sigDate, 'vs', SELECTED_DATE, 'match:', match);
+            return match;
+        });
+        console.log('[renderHistoryGrid] After date filter:', filtered.length, 'signals');
+    }
+    
+    // Update count badge
+    if($('history-count')) $('history-count').textContent=filtered.length+' trades';
+    
+    // Update stats (show total filtered count)
+    var baseSignals=SELECTED_DATE?signals.filter(s=>{var d=s.timestamp?s.timestamp.split('T')[0]:null;return d===SELECTED_DATE;}):signals;
+    var wins=baseSignals.filter(s=>s.result==='WIN').length;
+    var losses=baseSignals.filter(s=>s.result==='LOSS').length;
+    var open=baseSignals.filter(s=>s.result==='OPEN'||s.result==='PENDING').length;
+    var wr=(wins+losses)>0?((wins/(wins+losses))*100).toFixed(1):0;
+    var dateInfo=SELECTED_DATE?`| Filter: <b style="color:var(--acc)">${SELECTED_DATE}</b><span class="clear-filter" onclick="clearDateFilter()">✕ Clear</span>`:'';
+    
+    var statsHTML=`Total: <b>${baseSignals.length}</b> signals | ✅ TP: <b style="color:var(--grn)">${wins}</b> | ❌ SL: <b style="color:var(--red)">${losses}</b> | ⏳ Open: <b style="color:var(--acc)">${open}</b> | Win Rate: <b>${wr}%</b> ${dateInfo}`;
+    
+    if($('history-stats')) $('history-stats').innerHTML=statsHTML;
     
     if(!filtered.length){
-        grid.innerHTML='<div style="text-align:center;color:var(--tx2);padding:20px">No signals match the current filter</div>';
+        var msg=SELECTED_DATE?`No signals on ${SELECTED_DATE}`:'No signals match the current filter';
+        if(grid) grid.innerHTML='<div style="text-align:center;color:var(--tx2);padding:40px;font-size:13px">'+msg+'</div>';
         return;
     }
     
-    var h=`<table style="font-size:11px;width:100%"><thead><tr style="font-size:10px;color:var(--tx2);text-align:left"><th>Date</th><th>Coin</th><th>Type</th><th>Entry</th><th>SL</th><th>TP</th><th>Result</th><th>PNL</th></tr></thead><tbody>`;
+    // Modern table design
+    var h=`<table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Coin</th>
+                <th>Signal</th>
+                <th>Entry Price</th>
+                <th>SL / TP</th>
+                <th>Result</th>
+                <th>PNL</th>
+            </tr>
+        </thead>
+        <tbody>`;
     
     filtered.forEach(s=>{
-        var date=s.timestamp?s.timestamp.split('T')[0].slice(5):'—'; // MM-DD
-        var statusColor=s.signal==='LONG'?'var(--grn)':s.signal==='SHORT'?'var(--red)':'var(--tx2)';
-        var outcome=s.result==='WIN'?'✅ TP':s.result==='LOSS'?'❌ SL':s.result==='PENDING'?'⏳ PENDING':'⏳ OPEN';
-        var outcomeColor=s.result==='WIN'?'var(--grn)':s.result==='LOSS'?'var(--red)':'var(--tx2)';
+        var date=s.timestamp?s.timestamp.split('T')[0].slice(5):'—';
+        var time=s.timestamp?new Date(s.timestamp).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
         
-        // Show exit price if closed
-        var exitInfo=s.exit_price?`<br><span style="font-size:9px">→ ${fp(s.exit_price)}</span>`:'';
+        // Signal badge class
+        var signalClass=s.signal==='LONG'?'long':'short';
+        var signalIcon=s.signal==='LONG'?'📈':'📉';
         
-        // PNL color
+        // Result badge
+        var resultClass=s.result==='WIN'?'win':s.result==='LOSS'?'loss':'open';
+        var resultText=s.result==='WIN'?'TP Hit':s.result==='LOSS'?'SL Hit':'Open';
+        var resultIcon=s.result==='WIN'?'✅':s.result==='LOSS'?'❌':'⏳';
+        
+        // PNL
         var pnl=s.pnl_pct||0;
-        var pnlColor=pnl>0?'var(--grn)':pnl<0?'var(--red)':'var(--tx2)';
-        var pnlText=s.result==='WIN'?`+${pnl}%`:s.result==='LOSS'?`${pnl}%`:'—';
+        var pnlClass=pnl>0?'positive':pnl<0?'negative':'neutral';
+        var pnlText=s.result==='WIN'?`+${pnl.toFixed(1)}%`:s.result==='LOSS'?`${pnl.toFixed(1)}%`:'—';
         
         // SL/TP distances
         var slRisk=s.entry_price&&s.sl?Math.abs(((s.sl-s.entry_price)/s.entry_price)*100).toFixed(1):'—';
         var tpReward=s.entry_price&&s.tp?Math.abs(((s.tp-s.entry_price)/s.entry_price)*100).toFixed(1):'—';
         
-        h+=`<tr style="border-bottom:1px solid var(--bd);transition:background .1s" onmouseover="this.style.background='var(--sf2)'" onmouseout="this.style.background='transparent'">
-            <td>${date}</td>
-            <td><b>${s.symbol}</b><br><span style="font-size:9px;color:var(--tx2)">${s.regime||'—'}</span></td>
-            <td style="color:${statusColor};font-weight:600">${s.signal}</td>
-            <td>${fp(s.entry_price)}<br><span style="font-size:9px;color:var(--tx2)">Conf: ${s.confidence}%</span></td>
-            <td><span style="color:var(--red)">${fp(s.sl)}</span><br><span style="font-size:9px;color:var(--tx2)">-${slRisk}%</span></td>
-            <td><span style="color:var(--grn)">${fp(s.tp)}</span><br><span style="font-size:9px;color:var(--tx2)">+${tpReward}%</span></td>
-            <td style="color:${outcomeColor};font-weight:600">${outcome}${exitInfo}</td>
-            <td style="color:${pnlColor};font-weight:600">${pnlText}</td>
+        // Exit price if closed
+        var exitInfo=s.exit_price?`<div style="font-size:9px;color:var(--tx2)">Exit: ${fp(s.exit_price)}</div>`:'';
+        
+        h+=`<tr>
+            <td>
+                <div style="line-height:1.4">
+                    <div style="font-weight:600">${date}</div>
+                    <div style="font-size:9px;color:var(--tx2)">${time}</div>
+                </div>
+            </td>
+            <td>
+                <div class="coin-cell">
+                    <div class="coin-icon">${s.symbol[0]}</div>
+                    <div class="coin-info">
+                        <div class="coin-name">${s.symbol.replace('USDT','')}</div>
+                        <div class="coin-meta">${s.regime||'—'}</div>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <span class="signal-badge ${signalClass}">${signalIcon} ${s.signal}</span>
+            </td>
+            <td>
+                <div class="price-cell">
+                    <div class="price-main">${fp(s.entry_price)}</div>
+                    <div class="price-sub">Conf: ${s.confidence}%</div>
+                </div>
+            </td>
+            <td>
+                <div class="sl-tp-cell">
+                    <div class="sl-val">SL: ${fp(s.sl)} <span style="font-size:9px;color:var(--tx2)">(-${slRisk}%)</span></div>
+                    <div class="tp-val">TP: ${fp(s.tp)} <span style="font-size:9px;color:var(--tx2)">(+${tpReward}%)</span></div>
+                </div>
+            </td>
+            <td>
+                <span class="result-badge ${resultClass}">${resultIcon} ${resultText}</span>
+                ${exitInfo}
+            </td>
+            <td class="pnl-cell ${pnlClass}">${pnlText}</td>
         </tr>`;
     });
     
     h+='</tbody></table>';
-    grid.innerHTML=h;
+    if(grid) grid.innerHTML=h;
+    console.log('[renderHistoryGrid] Rendered', filtered.length, 'rows');
 }
 
 function filterHistory(type,btn){
-    document.querySelectorAll('[data-hf]').forEach(b=>b.classList.remove('a'));
+    document.querySelectorAll('[data-hf]').forEach(b=>{
+        b.classList.remove('active');
+        b.classList.remove('a');
+    });
+    btn.classList.add('active');
     btn.classList.add('a');
     if(window._signalHistory)renderHistoryGrid(window._signalHistory);
 }
 
-// Charts (Chart.js) - Real Data Only
+// Charts (Chart.js) - Enhanced Design
 function renderCharts(data){
     if(window.pnlChart)window.pnlChart.destroy();
     if(window.wrChart)window.wrChart.destroy();
 
-    // If no data, show flat line at 0
+    // If no data, show empty state
     if(!data.labels || data.labels.length===0){
         data={labels:['No Data'],pnl:[0],win_rate:[0]};
     }
 
-    window.pnlChart=new Chart($('chart-pnl'),{type:'line',data:{labels:data.labels,datasets:[{label:'Performance Score',data:data.pnl,borderColor:'#f0b90b',backgroundColor:'rgba(240,185,11,0.1)',fill:true,tension:0.4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#2b3139'},ticks:{color:'#848e9c'}},y:{grid:{color:'#2b3139'},ticks:{color:'#848e9c'}}}}});
-    window.wrChart=new Chart($('chart-wr'),{type:'line',data:{labels:data.labels,datasets:[{label:'Win Rate %',data:data.win_rate,borderColor:'#0ecb81',backgroundColor:'rgba(14,203,129,0.1)',fill:true,tension:0.4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#2b3139'},ticks:{color:'#848e9c'}},y:{min:0,max:100,grid:{color:'#2b3139'},ticks:{color:'#848e9c'}}}}});
+    // Cumulative Performance Chart (PNL)
+    window.pnlChart=new Chart($('chart-pnl'),{
+        type:'line',
+        data:{
+            labels:data.labels,
+            datasets:[{
+                label:'Score',
+                data:data.pnl,
+                borderColor:'#f0b90b',
+                backgroundColor:'rgba(240,185,11,0.1)',
+                fill:true,
+                tension:0.4,
+                pointRadius:3,
+                pointBackgroundColor:'#f0b90b',
+                pointBorderColor:'#1c2128',
+                pointBorderWidth:2,
+                borderWidth:2
+            }]
+        },
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            plugins:{
+                legend:{display:false},
+                tooltip:{
+                    backgroundColor:'#1c2128',
+                    borderColor:'#2b3139',
+                    borderWidth:1,
+                    titleColor:'#eaecef',
+                    bodyColor:'#eaecef',
+                    padding:10,
+                    displayColors:false
+                }
+            },
+            scales:{
+                x:{
+                    grid:{color:'rgba(43,49,57,0.5)',drawBorder:false},
+                    ticks:{color:'#848e9c',font:{size:10}}
+                },
+                y:{
+                    grid:{color:'rgba(43,49,57,0.5)',drawBorder:false},
+                    ticks:{color:'#848e9c',font:{size:10}},
+                    beginAtZero:true
+                }
+            }
+        }
+    });
+
+    // Win Rate Chart
+    window.wrChart=new Chart($('chart-wr'),{
+        type:'line',
+        data:{
+            labels:data.labels,
+            datasets:[{
+                label:'Win Rate %',
+                data:data.win_rate,
+                borderColor:'#0ecb81',
+                backgroundColor:'rgba(14,203,129,0.1)',
+                fill:true,
+                tension:0.4,
+                pointRadius:3,
+                pointBackgroundColor:'#0ecb81',
+                pointBorderColor:'#1c2128',
+                pointBorderWidth:2,
+                borderWidth:2
+            }]
+        },
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            plugins:{
+                legend:{display:false},
+                tooltip:{
+                    backgroundColor:'#1c2128',
+                    borderColor:'#2b3139',
+                    borderWidth:1,
+                    titleColor:'#eaecef',
+                    bodyColor:'#eaecef',
+                    padding:10,
+                    displayColors:false,
+                    callbacks:{
+                        label:function(context){return context.parsed.y.toFixed(1)+'%';}
+                    }
+                }
+            },
+            scales:{
+                x:{
+                    grid:{color:'rgba(43,49,57,0.5)',drawBorder:false},
+                    ticks:{color:'#848e9c',font:{size:10}}
+                },
+                y:{
+                    min:0,
+                    max:100,
+                    grid:{color:'rgba(43,49,57,0.5)',drawBorder:false},
+                    ticks:{color:'#848e9c',font:{size:10},callback:function(value){return value+'%';}}
+                }
+            }
+        }
+    });
 }
+
 
 // Alerts (3 Sections: Recent, High Confidence, Near Entry)
 async function loadAlerts(){
@@ -483,44 +1186,61 @@ async function loadLiquidations(){
             return;
         }
         
-        // Calculate total
-        var totalValue=res.total_value||0;
-        var totalStr=totalValue>1e9?(totalValue/1e9).toFixed(2)+'B':totalValue>1e6?(totalValue/1e6).toFixed(1)+'M':totalValue.toFixed(0);
+        // Calculate total liquidation value
+        var totalVal=res.total_value||0;
+        var totalStr=totalVal>1e12?(totalVal/1e12).toFixed(2)+'T':totalVal>1e9?(totalVal/1e9).toFixed(2)+'B':totalVal>1e6?(totalVal/1e6).toFixed(1)+'M':totalVal.toFixed(0);
         
-        // Build heatmap bars
-        var maxVal=Math.max(...heatmap.map(h=>h.total_value));
-        var html=`<div style="font-size:11px;color:var(--tx2);margin-bottom:8px">Total Liquidated (24h): <b>${totalStr}</b></div>`;
-        html+='<div style="max-height:240px;overflow-y:auto">';
+        // Build liquidation table - matches API response fields
+        var html=`
+        <div style="font-size:11px;color:var(--tx2);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+            <span>Total Liquidations: <b style="color:var(--acc)">${totalStr}</b></span>
+            <span style="font-size:9px">Top 15 by Value</span>
+        </div>
+        <div style="max-height:300px;overflow-y:auto">
+        <table style="font-size:10px;width:100%">
+            <thead>
+                <tr style="color:var(--tx2);font-size:9px;text-transform:uppercase">
+                    <th style="text-align:left;padding:6px 4px">Coin</th>
+                    <th style="text-align:right;padding:6px 4px">Total Liq</th>
+                    <th style="text-align:right;padding:6px 4px">Long Liq</th>
+                    <th style="text-align:right;padding:6px 4px">Short Liq</th>
+                    <th style="text-align:center;padding:6px 4px">L/S %</th>
+                    <th style="text-align:center;padding:6px 4px">Level</th>
+                </tr>
+            </thead>
+            <tbody>`;
         
         heatmap.forEach(item=>{
-            var pct=(item.total_value/maxVal*100).toFixed(0);
-            var longPct=item.long_ratio||50;
-            var shortPct=100-longPct;
-            var intensity=item.intensity||'low';
-            var barColor=intensity==='high'?'var(--red)':intensity==='medium'?'var(--acc)':'var(--blue)';
+            // Use actual API fields: total_value, long_liquidations, short_liquidations, long_ratio, intensity
+            var valStr = item.total_value > 1e9 ? (item.total_value/1e9).toFixed(2)+'B' : item.total_value > 1e6 ? (item.total_value/1e6).toFixed(1)+'M' : item.total_value.toFixed(0);
+            var longStr = item.long_liquidations > 1e9 ? (item.long_liquidations/1e9).toFixed(2)+'B' : item.long_liquidations > 1e6 ? (item.long_liquidations/1e6).toFixed(1)+'M' : item.long_liquidations.toFixed(0);
+            var shortStr = item.short_liquidations > 1e9 ? (item.short_liquidations/1e9).toFixed(2)+'B' : item.short_liquidations > 1e6 ? (item.short_liquidations/1e6).toFixed(1)+'M' : item.short_liquidations.toFixed(0);
             
-            html+=`
-            <div style="margin-bottom:8px;padding:8px;background:var(--sf2);border-radius:6px">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-                    <span style="font-weight:600">${item.symbol}</span>
-                    <span style="font-size:10px;color:var(--tx2)">${(item.total_value/1e6).toFixed(1)}M</span>
-                </div>
-                <div style="display:flex;height:18px;border-radius:4px;overflow:hidden;background:var(--bg);margin-bottom:4px">
-                    <div style="width:${longPct}%;background:rgba(246,70,93,0.7);display:flex;align-items:center;justify-content:center;font-size:9px;color:white">${longPct>15?shortPct+'% Short':'•'}</div>
-                    <div style="width:${shortPct}%;background:rgba(14,203,129,0.7);display:flex;align-items:center;justify-content:center;font-size:9px;color:white">${shortPct>15?longPct+'% Long':'•'}</div>
-                </div>
-                <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--tx2)">
-                    <span>Long Liq: ${(item.long_liquidations/1e6).toFixed(1)}M</span>
-                    <span>Short Liq: ${(item.short_liquidations/1e6).toFixed(1)}M</span>
-                </div>
-            </div>`;
+            // Long ratio indicates which side is being liquidated more
+            var longRatio = item.long_ratio || 50;
+            var ratioColor = longRatio > 70 ? 'var(--grn)' : longRatio < 30 ? 'var(--red)' : 'var(--tx2)';
+            
+            // Intensity indicator
+            var intensity = item.intensity || 'low';
+            var signalIcon = intensity === 'high' ? '🔴' : intensity === 'medium' ? '🟡' : '⚪';
+            var signalTitle = intensity === 'high' ? 'High liquidation activity' : intensity === 'medium' ? 'Medium activity' : 'Low activity';
+            
+            html+=`<tr style="border-bottom:1px solid var(--bd)" onmouseover="this.style.background='var(--sf2)'" onmouseout="this.style.background='transparent'">
+                <td style="padding:8px 4px;font-weight:600">${item.symbol}</td>
+                <td style="text-align:right;padding:8px 4px;color:var(--acc)">${valStr}</td>
+                <td style="text-align:right;padding:8px 4px;color:var(--grn)">${longStr}</td>
+                <td style="text-align:right;padding:8px 4px;color:var(--red)">${shortStr}</td>
+                <td style="text-align:center;padding:8px 4px;color:${ratioColor}">${longRatio}%</td>
+                <td style="text-align:center;padding:8px 4px" title="${signalTitle}">${signalIcon}</td>
+            </tr>`;
         });
-        html+='</div>';
+        
+        html+='</tbody></table></div>';
         
         $('liquidation-content').innerHTML=html;
     }catch(e){
         console.error('Liquidation load error:',e);
-        $('liquidation-content').innerHTML='<div style="color:var(--red);text-align:center;padding:20px">Error loading data</div>';
+        $('liquidation-content').innerHTML='<div style="color:var(--red);text-align:center;padding:20px">Error loading data: '+e.message+'</div>';
     }
 }
 

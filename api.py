@@ -198,6 +198,47 @@ async def get_db_stats():
         return {"ok": True, "stats": {"wins": 0, "losses": 0, "win_rate": 0}}
 
 
+@app.get("/api/rl/performance")
+async def get_rl_performance(days: int = 7):
+    """
+    Get RL adaptive performance analysis.
+    Returns performance metrics per regime with Kelly Criterion and Expectancy.
+    """
+    try:
+        # Use engine's RL optimizer directly (avoid duplicate DB connections)
+        optimizer = engine.rl_optimizer
+        performance = optimizer.analyze_recent_performance(days=days)
+        recommendations = {}
+        
+        # Generate recommendations per regime
+        for regime, data in performance.items():
+            if "error" not in data:
+                recommendations[regime] = optimizer.get_recommended_params(regime)
+        
+        return {
+            "ok": True,
+            "days_analyzed": days,
+            "performance": performance,
+            "recommendations": recommendations,
+            "current_weights": optimizer.current_weights,
+        }
+    except Exception as e:
+        logger.error(f"RL Performance API Error: {e}")
+        return {"ok": False, "error": str(e)}
+
+
+@app.get("/api/rl/report")
+async def get_rl_report():
+    """Get human-readable RL analysis report."""
+    try:
+        optimizer = engine.rl_optimizer
+        report = optimizer.generate_report()
+        return {"ok": True, "report": report}
+    except Exception as e:
+        logger.error(f"RL Report API Error: {e}")
+        return {"ok": False, "error": str(e)}
+
+
 @app.get("/api/signals/history")
 async def get_signals_history(limit: int = 100):
     """

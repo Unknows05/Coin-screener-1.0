@@ -19,7 +19,8 @@ class Scorer:
         self.tf_weights = config.get("timeframe_weights", {"15m": 0.60, "1h": 0.30, "4h": 0.10})
         self.squeeze_threshold = config.get("scan", {}).get("squeeze_threshold", 0.06)
 
-    def score_coin(self, klines_by_tf: dict[str, list[dict]]) -> dict:
+    def score_coin(self, klines_by_tf: dict[str, list[dict]], regime: str = None, 
+                   adaptive_weights: dict = None, enhanced_metrics: dict = None) -> dict:
         """
         Score a coin based on multi-TF logic and anomaly detection.
         Returns score 0-100 where:
@@ -96,6 +97,53 @@ class Scorer:
                 elif breakout_bear:
                     raw_score -= 15
                 
+                # Apply enhanced metrics bonus/penalty if available
+                enhanced_adjustment = 0
+                if enhanced_metrics and tf == "15m":  # Only apply on primary timeframe
+                    # 1. Sentiment Score adjustment (contrarian approach)
+                    sentiment_score = enhanced_metrics.get("sentimentScore", 50)
+                    sentiment = enhanced_metrics.get("sentiment", "NEUTRAL")
+                    
+                    # If technical score bullish but sentiment extreme bullish = reduce (contrarian)
+                    # If technical score bullish and sentiment bearish = boost (smart money disagreement)
+                    if raw_score > 60 and sentiment_score > 70:
+                        enhanced_adjustment -= 5  # Reduce bullish signal at extreme sentiment
+                    elif raw_score > 60 and sentiment_score < 40:
+                        enhanced_adjustment += 5  # Boost when smart money disagrees with retail
+                    elif raw_score < 40 and sentiment_score < 30:
+                        enhanced_adjustment += 5  # Reduce bearish at extreme fear (contrarian)
+                    elif raw_score < 40 and sentiment_score > 60:
+                        enhanced_adjustment -= 5  # Boost bearish when retail greedy
+                    
+                    # 2. Composite signals from enhanced data
+                    for signal in enhanced_metrics.get("compositeSignals", []):
+                        sig_type = signal.get("type")
+                        sig_name = signal.get("signal", "")
+                        
+                        # Funding extremes (contrarian)
+                        if sig_type == "FUNDING":
+                            if "EXTREME_LONG" in sig_name and raw_score > 55:
+                                enhanced_adjustment -= 8  # Heavy long funding = short bias
+                            elif "EXTREME_SHORT" in sig_name and raw_score < 45:
+                                enhanced_adjustment += 8  # Heavy short funding = long bias
+                        
+                        # Order flow (momentum confirmation)
+                        if sig_type == "ORDER_FLOW":
+                            if "HEAVY_TAKER_BUYING" in sig_name and raw_score > 55:
+                                enhanced_adjustment += 3  # Confirm breakout
+                            elif "HEAVY_TAKER_SELLING" in sig_name and raw_score < 45:
+                                enhanced_adjustment -= 3  # Confirm breakdown
+                        
+                        # Liquidity walls (support/resistance)
+                        if sig_type == "LIQUIDITY":
+                            if "STRONG_BID_SUPPORT" in sig_name and raw_score > 50:
+                                enhanced_adjustment += 4  # Support below = safer long
+                            elif "STRONG_ASK_RESISTANCE" in sig_name and raw_score < 50:
+                                enhanced_adjustment -= 4  # Resistance above = safer short
+                
+                # Apply adjustment
+                raw_score += enhanced_adjustment
+                
                 # Clamp to 0-100 range
                 final_tf_score = max(0, min(100, raw_score))
                 
@@ -109,6 +157,7 @@ class Scorer:
                     "breakout_bear": breakout_bear,
                     "price_vs_bb_upper": round(price_vs_upper, 2),
                     "price_vs_bb_lower": round(price_vs_lower, 2),
+                    "enhanced_adjustment": enhanced_adjustment if enhanced_metrics else 0,
                 }
                 
             except Exception as e:
@@ -145,6 +194,43 @@ class Scorer:
             
             if total_weight > 0:
                 final_score = (weighted_sum / total_weight) + trend_alignment
+                
+                # Apply RL adaptive regime-specific score adjustment
+                if regime and adaptive_weights:
+                    regime_profile = adaptive_weights.get(regime, {})
+                    if regime_profile:
+                        threshold = regime_profile.get("score_threshold", 55)
+                        # Boost or reduce score based on regime performance
+                        current_wr = regime_profile.get("recent_wr", 50)
+                        if current_wr > 60:
+                            final_score += 3  # Slight boost for high-performing regime
+                        elif current_wr < 45:
+                            final_score -= 3  # Slight penalty for poor regime
+                
+                # Apply enhanced metrics composite sentiment
+                if enhanced_metrics:
+                    sentiment = enhanced_metrics.get("sentiment", "NEUTRAL")
+                    sentiment_score = enhanced_metrics.get("sentimentScore", 50)
+                    
+                    # If sentiment strongly disagrees with technical score, apply pressure
+                    if sentiment == "BULLISH" and final_score < 45:
+                        # Smart money bullish but technical bearish = potential reversal
+                        final_score += 5  # Boost towards neutral
+                    elif sentiment == "BEARISH" and final_score > 55:
+                        # Smart money bearish but technical bullish = potential reversal  
+                        final_score -= 5  # Reduce towards neutral
+                    
+                    # Funding rate adjustment (contrarian)
+                    funding = enhanced_metrics.get("funding")
+                    if funding:
+                        annualized = funding.get("annualizedPct", 0)
+                        if annualized > 40 and final_score > 55:
+                            # Very expensive to hold longs = reduce bullish bias
+                            final_score -= 4
+                        elif annualized < -40 and final_score < 45:
+                            # Very expensive to hold shorts = reduce bearish bias
+                            final_score += 4
+                
                 # Clamp final score
                 final_score = max(0, min(100, final_score))
             else:
@@ -154,6 +240,7 @@ class Scorer:
             "composite_score": round(final_score, 1),
             "tf_scores": tf_scores,
             "tf_metrics": tf_metrics,
+            "enhanced_metrics": enhanced_metrics,  # Include for signal generation
         }
 
     # --- Math Helpers (Robust) ---
