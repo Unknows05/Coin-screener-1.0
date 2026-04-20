@@ -1,16 +1,31 @@
-# 📊 Coin Screener API
+# 📊 Coin Screener Pro
 
 Deep screening system for Binance USDT-M Futures. **No API key needed.**
 
 ## Fitur
 
+### Dashboard
 - 🔍 **Deep Screening** — 30 alpha factors, regime detection, pattern recognition
 - 🧠 **Multi-Timeframe** — 15m + 1h + 4h weighted scoring
 - 📐 **Pattern Recognition** — Triangle, Flag, Double Top/Bottom, Breakout
 - 🎯 **Signal Generation** — LONG/SHORT/WAIT + confidence, entry, SL, TP
-- 🔄 **Auto-Scan** — Every 15 minutes (configurable)
-- 🌐 **REST API** — FastAPI with Swagger docs
-- 💾 **Result Cache** — In-memory + file persistence
+- 📋 **Copy to Clipboard** — Klik 📋 untuk copy symbol/price/SL/TP
+
+### Signal History
+- 📈 **Outcome Tracking** — Track SL/TP hits (WIN/LOSS/OPEN)
+- 📊 **Calendar View** — Daily win rate & performance stats
+- 🎯 **Auto Monitoring** — Signals auto-update when SL/TP hit
+- ✅ **Only Active Signals** — WAIT signals excluded from database
+
+### Alerts
+- 🔔 **Active Signals** — Shows only LONG/SHORT with SL/TP
+- 📉 **Confidence Ranking** — Sorted by signal confidence
+- 💡 **Signal Type Badge** — 📈 LONG (green) / 📉 SHORT (red)
+
+### Liquidation Heatmap
+- 🔥 **Total Liquidation** — Top liquidated coins
+- 📊 **Long/Short Breakdown** — L/S ratio visualization
+- ⚡ **Level Detection** — Liquidation cluster levels
 
 ## Quick Start
 
@@ -39,8 +54,13 @@ pip install --break-system-packages -r requirements.txt
 | POST | `/api/scan` | Trigger screening now (non-blocking) |
 | GET | `/api/scan/latest` | Get latest scan result |
 | GET | `/api/signals` | Only LONG/SHORT signals |
+| GET | `/api/signals/history` | Signal history with SL/TP outcomes |
+| GET | `/api/alerts` | Active signals for alerts page |
+| GET | `/api/calendar/{year}/{month}` | Calendar data for a month |
+| GET | `/api/liquidations` | Liquidation heatmap data |
 | GET | `/api/coin/{SYMBOL}` | Detail for specific coin |
 | GET | `/api/status` | System status & metadata |
+| GET | `/api/db/stats` | Database statistics (wins/losses/win_rate) |
 
 ## Examples
 
@@ -125,6 +145,8 @@ curl http://localhost:8000/api/status
 ```
 coin-screener/
 ├── api.py                   # FastAPI server + scheduler
+├── static/
+│   └── dashboard.html       # Web UI (Dashboard, History, Alerts)
 ├── src/
 │   ├── engine.py            # ScreeningEngine orchestrator
 │   ├── binance_api.py       # Binance REST connector
@@ -134,6 +156,8 @@ coin-screener/
 │   ├── alpha.py             # 30 alpha factors
 │   ├── scorer.py            # Multi-timeframe scoring
 │   ├── signals.py           # Signal generation
+│   ├── database.py          # SQLite for signal tracking
+│   ├── liquidation.py       # Liquidation heatmap
 │   └── display.py           # Console output (rich)
 ├── config.yaml              # Configuration
 ├── requirements.txt
@@ -141,6 +165,7 @@ coin-screener/
 ├── screen_once.py           # CLI single scan
 └── data/
     ├── api.log              # Server log
+    ├── screener.db          # SQLite database (signals, daily stats)
     └── last_scan.json       # Cached scan result
 ```
 

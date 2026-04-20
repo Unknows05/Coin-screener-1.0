@@ -265,15 +265,15 @@ class ScreenerDB:
             logger.error(f"[DB] get_calendar_month error: {e}")
             return []
 
-    def get_signals_with_outcomes(self, limit: int = 200) -> list[dict]:
+    def get_signals_with_outcomes(self, limit: int = 500) -> list[dict]:
         """
         Get signal history with SL/TP outcomes.
         Returns: list of signals with result, exit_price, exit_reason, etc.
-        Sorted by result (WIN/LOSS first), then timestamp.
+        Sorted by timestamp (most recent first), includes all result types.
         """
         try:
             c = self.conn.cursor()
-            # First get closed trades (WIN/LOSS), then open trades, limited by total
+            # Get all signals ordered by timestamp, includes WIN/LOSS/OPEN
             c.execute(
                 """SELECT
                     id, timestamp, symbol, signal, entry_price, sl, tp,
@@ -281,13 +281,7 @@ class ScreenerDB:
                     exit_reason, final_price, scan_date
                 FROM signals
                 WHERE signal IN ('LONG', 'SHORT')
-                ORDER BY
-                    CASE result
-                        WHEN 'WIN' THEN 1
-                        WHEN 'LOSS' THEN 2
-                        ELSE 3
-                    END,
-                    timestamp DESC
+                ORDER BY timestamp DESC
                 LIMIT ?""",
                 (limit,)
             )
