@@ -1,0 +1,131 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ main, master ]
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      deploy_target:
+        description: 'Deploy target'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+        log-public-key: false
+
+    - name: Add known hosts
+      run: |
+        mkdir -p ~/.ssh
+        ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+
+    - name: Deploy to VPS
+      env:
+        VPS_HOST: ${{ secrets.VPS_HOST }}
+        VPS_USER: ${{ secrets.VPS_USER }}
+        DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '/home/screener/Coin-screener-1.0' }}
+      run: |
+        echo "🚀 Deploying to VPS..."
+        
+        # Create deployment script
+        cat > deploy.sh << 'EOF'
+        #!/bin/bash
+        set -e
+        
+        DEPLOY_PATH=$1
+        
+        echo "📁 Creating backup..."
+        if [ -d "$DEPLOY_PATH" ]; then
+          cd "$DEPLOY_PATH"
+          # Backup database
+          if [ -f "data/screener.db" ]; then
+            cp data/screener.db data/screener.db.backup.$(date +%Y%m%d_%H%M%S)
+          fi
+          # Backup adaptive weights
+          if [ -f "data/adaptive_weights.json" ]; then
+            cp data/adaptive_weights.json data/adaptive_weights.json.backup
+          fi
+        fi
+        
+        echo "📥 Updating code..."
+        cd "$DEPLOY_PATH"
+        git pull origin main
+        
+        echo "🔄 Setting up virtual environment..."
+        if [ ! -d "venv" ]; then
+          python3 -m venv venv
+        fi
+        source venv/bin/activate
+        pip install -r requirements.txt --quiet
+        
+        echo "🔧 Restarting service..."
+        if systemctl is-active --quiet coin-screener; then
+          sudo systemctl restart coin-screener
+          echo "✅ Service restarted via systemctl"
+        else
+          echo "⚠️  Systemd service not found, trying manual restart..."
+          # Stop if running
+          if [ -f data/api.pid ]; then
+            kill $(cat data/api.pid) 2>/dev/null || true
+            sleep 2
+          fi
+          # Start
+          nohup python api.py > data/api.log 2>&1 &
+          echo $! > data/api.pid
+          echo "✅ Server started manually (PID: $(cat data/api.pid))"
+        fi
+        
+        echo "⏳ Waiting for server to start..."
+        sleep 5
+        
+        echo "🔍 Health check..."
+        if curl -s http://localhost:8000/health > /dev/null; then
+          echo "✅ Server is healthy!"
+          curl -s http://localhost:8000/health
+        else
+          echo "⚠️  Health check failed, checking logs..."
+          tail -20 data/api.log
+          exit 1
+        fi
+        
+        echo "🎉 Deployment successful!"
+        echo "🔗 Dashboard: http://$(curl -s ifconfig.me):8000"
+        EOF
+        chmod +x deploy.sh
+        
+        # Copy and execute deploy script
+        scp deploy.sh $VPS_USER@$VPS_HOST:/tmp/deploy.sh
+        ssh $VPS_USER@$VPS_HOST "bash /tmp/deploy.sh $DEPLOY_PATH"
+        
+        echo "✅ Deployment completed!"
+
+    - name: Notify success
+      if: success()
+      run: |
+        echo "🎉 Deployment successful!"
+        echo "🌐 Dashboard: http://${{ secrets.VPS_HOST }}:8000"
+
+    - name: Notify failure
+      if: failure()
+      run: |
+        echo "❌ Deployment failed!"
+        echo "Check VPS logs with: ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} 'tail -50 ${{ secrets.DEPLOY_PATH }}/data/api.log'"
