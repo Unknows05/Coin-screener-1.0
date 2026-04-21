@@ -87,6 +87,41 @@ risk:
   tp_atr_multiplier: 3.0     # TP = entry + (ATR * multiplier)
   max_risk_pct: 0.02         # Max 2% risk per trade (position sizing reference)
 
+# Microstructure Data (V2) — Real liquidations, whale flow, order book
+microstructure:
+  enabled: true               # Enable V2 features (recommended)
+  
+  # Which coins get enhanced data (null = all symbols)
+  # Set to specific list if you want to limit API calls: ["BTCUSDT", "ETHUSDT"]
+  enhanced_symbols: null
+  
+  # Cache TTL for volatile data (seconds)
+  cache_ttl_seconds: 60
+  
+  # Liquidation detection thresholds
+  liquidation:
+    cascade_warning_usd: 1000000    # $1M = warning
+    cascade_block_usd: 3000000       # $3M = block trades
+    window_minutes: 15               # Lookback window for liquidations
+  
+  # Whale detection thresholds
+  whale:
+    trade_threshold_usd: 100000     # $100K = whale trade
+    position_flip_threshold: 0.1     # 10% change = flip detected
+    extreme_position_ratio: 0.7      # 70% long/short = extreme
+  
+  # Order book wall detection
+  orderbook:
+    wall_threshold_usd: 500000      # $500K = wall
+    wall_proximity_pct: 1.5         # 1.5% distance = nearby
+    depth_levels: 100                # Analyze top 100 levels
+  
+  # Risk manager V2 thresholds
+  risk:
+    extreme_sentiment_threshold: 75  # 75+ score = extreme
+    divergence_penalty: 15             # Score penalty for whale divergence
+    cascade_min_score: 30              # Minimum score to trade during cascade
+
 # Logging
 logging:
   level: INFO

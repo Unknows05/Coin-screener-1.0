@@ -126,7 +126,38 @@ app = FastAPI(
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "service": "coin-screener", "version": "2.0.0"}
+    """Health check with V2 microstructure status."""
+    status = {
+        "status": "ok", 
+        "service": "coin-screener", 
+        "version": "2.0.0",
+        "features": {
+            "microstructure_v2": False,
+            "real_liquidations": False,
+            "whale_tracking": False,
+            "regime_v2": False
+        },
+        "config": {
+            "symbols_count": len(engine.symbols) if engine else 0,
+            "enhanced_symbols_count": len(engine.enhanced_symbols) if engine and hasattr(engine, 'enhanced_symbols') else 0,
+            "microstructure_enabled": False
+        }
+    }
+    
+    # Add V2 status if engine initialized
+    if engine:
+        status["config"]["microstructure_enabled"] = getattr(engine, 'use_microstructure', False)
+        status["config"]["scan_count"] = getattr(engine, '_scan_count', 0)
+        status["config"]["last_scan"] = getattr(engine, '_last_scan_time', None)
+        
+        # Feature flags
+        use_micro = getattr(engine, 'use_microstructure', False)
+        status["features"]["microstructure_v2"] = use_micro
+        status["features"]["real_liquidations"] = use_micro and getattr(engine, '_enhanced_data_v2', None) is not None
+        status["features"]["whale_tracking"] = use_micro and getattr(engine, '_enhanced_data_v2', None) is not None
+        status["features"]["regime_v2"] = use_micro and getattr(engine, '_regime_detector_v2', None) is not None
+    
+    return status
 
 
 @app.post("/api/scan")

@@ -59,25 +59,25 @@ class ScreeningEngineV2:
     All features tunable via config.
     """
 
-    def __init__(self, config: dict, cache_dir: str = "data",
-                 use_microstructure: bool = True,
-                 enhanced_symbols: Optional[list] = None):
+    def __init__(self, config: dict, cache_dir: str = "data"):
         """
         Initialize enhanced screening engine.
         
         Args:
             config: Standard config dict
             cache_dir: Data directory
-            use_microstructure: Enable V2 features (default: True)
-            enhanced_symbols: List of symbols untuk enhanced data (default: all 30)
         """
         self.config = config
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.cache_file = self.cache_dir / "last_scan.json"
         
-        # Feature flags
-        self.use_microstructure = use_microstructure
+        # Feature flags from config
+        micro_config = config.get("microstructure", {})
+        self.use_microstructure = micro_config.get("enabled", True)
+        
+        # Enhanced symbols config (null = all)
+        enhanced_symbols = micro_config.get("enhanced_symbols")
         
         # Internal state
         self._lock = threading.Lock()
@@ -120,18 +120,23 @@ class ScreeningEngineV2:
         
         # V2 components (microstructure)
         if self.use_microstructure:
-            self.enhanced_data_v2: EnhancedDataV2 = get_enhanced_v2()
-            self.regime_detector_v2: RegimeDetectorV2 = get_regime_v2(self.enhanced_data_v2)
-            self.risk_manager_v2: RiskManagerV2 = get_risk_manager_v2(
+            micro_config = config.get("microstructure", {})
+            self._enhanced_data_v2: EnhancedDataV2 = get_enhanced_v2(
+                api=self.api,
+                config=micro_config
+            )
+            self._regime_detector_v2: RegimeDetectorV2 = get_regime_v2(self._enhanced_data_v2)
+            self._risk_manager_v2: RiskManagerV2 = get_risk_manager_v2(
                 RiskConfig(), 
                 str(self.cache_dir / "screener.db"),
-                self.enhanced_data_v2
+                self._enhanced_data_v2,
+                micro_config
             )
             logger.info("[EngineV2] Microstructure features ENABLED (all 30 coins)")
         else:
-            self.enhanced_data_v2 = None
-            self.regime_detector_v2 = None
-            self.risk_manager_v2 = None
+            self._enhanced_data_v2 = None
+            self._regime_detector_v2 = None
+            self._risk_manager_v2 = None
             logger.info("[EngineV2] Microstructure features DISABLED (V1 mode)")
 
         # Bounded deque to prevent memory leak - keeps last 100 alerts
@@ -145,7 +150,7 @@ class ScreeningEngineV2:
         logger.info(
             f"[EngineV2] Initialized: {len(self.symbols)} symbols, "
             f"enhanced_symbols={len(self.enhanced_symbols)}, "
-            f"microstructure={use_microstructure}"
+            f"microstructure={self.use_microstructure}"
         )
 
     # ---- Lazy initialization ----
@@ -176,7 +181,7 @@ class ScreeningEngineV2:
     @property
     def regime_detector_v2(self) -> RegimeDetectorV2:
         if self._regime_detector_v2 is None and self.use_microstructure:
-            self._regime_detector_v2 = get_regime_v2(self.enhanced_data_v2)
+            self._regime_detector_v2 = get_regime_v2(self._enhanced_data_v2)
         return self._regime_detector_v2
 
     # ---- Auto-discover coins ----
@@ -303,7 +308,7 @@ class ScreeningEngineV2:
                             if len(regime_df) >= 50:
                                 # Use V2 if enabled and symbol is in enhanced list
                                 if self.use_microstructure and symbol in self.enhanced_symbols:
-                                    regime_v2_result = self.regime_detector_v2.detect(
+                                    regime_v2_result = self._regime_detector_v2.detect(
                                         regime_df, symbol, price
                                     )
                                     regime_data = {
@@ -318,12 +323,12 @@ class ScreeningEngineV2:
                                     microstructure_applied += 1
                                     
                                     # Also check for market flip
-                                    flip_detection = self.regime_detector_v2.detect_market_flip(
+                                    flip_detection = self._regime_detector_v2.detect_market_flip(
                                         symbol, price
                                     )
                                     
                                     # Get full microstructure untuk risk manager
-                                    micro_data = self.enhanced_data_v2.get_full_microstructure(
+                                    micro_data = self._enhanced_data_v2.get_full_microstructure(
                                         symbol, price
                                     )
                                 else:
@@ -371,10 +376,10 @@ class ScreeningEngineV2:
                     if signal_result.get("signal") in ("LONG", "SHORT"):
                         risk_check = None
                         
-                        if self.use_microstructure and self.risk_manager_v2:
+                        if self.use_microstructure and self._risk_manager_v2:
                             # Use V2 with microstructure
                             market_data = {"microstructure": micro_data} if micro_data else {}
-                            risk_check = self.risk_manager_v2.can_trade(
+                            risk_check = self._risk_manager_v2.can_trade(
                                 {
                                     "symbol": symbol,
                                     "signal": signal_result["signal"],
@@ -670,8 +675,8 @@ class ScreeningEngineV2:
     def close(self):
         """Cleanup resources."""
         self.db.close()
-        if self.enhanced_data_v2:
-            self.enhanced_data_v2.clear_cache()
+        if self._enhanced_data_v2:
+            self._enhanced_data_v2.clear_cache()
         logger.info("[EngineV2] Closed")
 
 

@@ -62,11 +62,21 @@ class EnhancedDataV2:
     """
     
     def __init__(self, api: Optional[BinanceFuturesAPI] = None, 
-                 cache_ttl: int = 60,  # 1 minute for volatile data
-                 whale_threshold_usd: float = 100000):  # $100K+
+                 config: Optional[dict] = None):
         self.api = api or BinanceFuturesAPI()
-        self.cache_ttl = cache_ttl
-        self.whale_threshold = whale_threshold_usd
+        
+        # Load config atau use defaults
+        micro_config = config or {}
+        liq_config = micro_config.get("liquidation", {})
+        whale_config = micro_config.get("whale", {})
+        ob_config = micro_config.get("orderbook", {})
+        
+        self.cache_ttl = micro_config.get("cache_ttl_seconds", 60)
+        self.whale_threshold = whale_config.get("trade_threshold_usd", 100000)
+        self.liq_cascade_warning = liq_config.get("cascade_warning_usd", 1000000)
+        self.liq_cascade_block = liq_config.get("cascade_block_usd", 3000000)
+        self.liq_window = liq_config.get("window_minutes", 15)
+        self.wall_threshold = ob_config.get("wall_threshold_usd", 500000)
         
         # Thread-safe cache
         self._cache: Dict[str, Tuple[any, float]] = {}
@@ -77,7 +87,7 @@ class EnhancedDataV2:
         self._liq_history: Dict[str, deque] = {}  # symbol -> deque of LiquidationEvent
         self._history_lock = threading.Lock()
         
-        logger.info(f"[EnhancedV2] Initialized with {cache_ttl}s cache, ${whale_threshold_usd:,.0f} whale threshold")
+        logger.info(f"[EnhancedV2] Initialized with {self.cache_ttl}s cache, ${self.whale_threshold:,.0f} whale threshold")
     
     def _get_cached(self, key: str) -> Optional[any]:
         """Get from cache if not expired."""
@@ -703,9 +713,10 @@ class EnhancedDataV2:
 _enhanced_v2: Optional[EnhancedDataV2] = None
 
 
-def get_enhanced_v2(api: Optional[BinanceFuturesAPI] = None) -> EnhancedDataV2:
+def get_enhanced_v2(api: Optional[BinanceFuturesAPI] = None,
+                    config: Optional[dict] = None) -> EnhancedDataV2:
     """Get or create EnhancedDataV2 singleton."""
     global _enhanced_v2
     if _enhanced_v2 is None:
-        _enhanced_v2 = EnhancedDataV2(api)
+        _enhanced_v2 = EnhancedDataV2(api, config)
     return _enhanced_v2

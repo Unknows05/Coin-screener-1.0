@@ -182,3 +182,320 @@ xt scan at: 04:44:07
 2026-04-21 04:48:08,238 [INFO] httpx: HTTP Request: GET https://fapi.binance.com/fapi/v1/ticker/24hr "HTTP/1.1 200 OK"
 2026-04-21 04:48:22,774 [INFO] httpx: HTTP Request: GET https://fapi.binance.com/fapi/v1/ticker/24hr "HTTP/1.1 200 OK"
 2026-04-21 04:48:37,805 [INFO] httpx: HTTP Request: GET https://fapi.binance.com/fapi/v1/ticker/24hr "HTTP/1.1 200 OK"
+2026-04-21 08:22:07,016 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:22:07,017 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:22:07,017 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:22:07,017 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:22:07,018 [INFO] src.enhanced_data_v2: [EnhancedV2] Initialized with 60s cache, $100,000 whale threshold
+2026-04-21 08:22:07,018 [INFO] src.regime_v2: [RegimeV2] Initialized with microstructure=True
+2026-04-21 08:22:18,104 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:22:18,104 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:22:18,105 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:22:18,105 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:22:18,105 [INFO] src.enhanced_data_v2: [EnhancedV2] Initialized with 60s cache, $100,000 whale threshold
+2026-04-21 08:22:18,105 [INFO] src.regime_v2: [RegimeV2] Initialized with microstructure=True
+2026-04-21 08:22:29,133 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:22:29,133 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:22:29,133 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:22:29,133 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:22:29,133 [INFO] src.enhanced_data_v2: [EnhancedV2] Initialized with 60s cache, $100,000 whale threshold
+2026-04-21 08:22:29,133 [INFO] src.regime_v2: [RegimeV2] Initialized with microstructure=True
+2026-04-21 08:22:40,162 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:22:40,162 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:22:40,162 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:22:40,162 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:22:40,162 [INFO] src.enhanced_data_v2: [EnhancedV2] Initialized with 60s cache, $100,000 whale threshold
+2026-04-21 08:22:40,162 [INFO] src.regime_v2: [RegimeV2] Initialized with microstructure=True
+2026-04-21 08:22:51,517 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:22:51,518 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:22:51,518 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:22:51,518 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:22:51,518 [INFO] src.enhanced_data_v2: [EnhancedV2] Initialized with 60s cache, $100,000 whale threshold
+2026-04-21 08:22:51,518 [INFO] src.regime_v2: [RegimeV2] Initialized with microstructure=True
+2026-04-21 08:23:02,824 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:23:02,824 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:23:02,825 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:23:02,825 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:23:14,393 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:23:14,393 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:23:14,393 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:23:14,393 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:23:25,824 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:23:25,824 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:23:25,824 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:23:25,825 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:23:37,318 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:23:37,318 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:23:37,318 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:23:37,318 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:23:48,913 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:23:48,914 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:23:48,914 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:23:48,914 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:24:00,384 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:24:00,385 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:24:00,385 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:24:00,385 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:24:11,821 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:24:11,821 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:24:11,821 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:24:11,821 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:24:23,210 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:24:23,210 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:24:23,210 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:24:23,210 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:24:34,525 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:24:34,525 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:24:34,525 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:24:34,526 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:24:46,051 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:24:46,051 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:24:46,052 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:24:46,052 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:24:57,231 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:24:57,231 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:24:57,231 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:24:57,231 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:24:59,597 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:24:59,597 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:24:59,598 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:24:59,598 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:25:08,492 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:25:08,492 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:25:08,492 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:25:08,493 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:25:08,493 [INFO] src.enhanced_data_v2: [EnhancedV2] Initialized with 60s cache, $100,000 whale threshold
+2026-04-21 08:25:08,493 [INFO] src.regime_v2: [RegimeV2] Initialized with microstructure=True
+2026-04-21 08:25:12,461 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:25:12,461 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:25:12,461 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:25:12,462 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:25:12,462 [INFO] src.enhanced_data_v2: [EnhancedV2] Initialized with 60s cache, $100,000 whale threshold
+2026-04-21 08:25:12,462 [INFO] src.regime_v2: [RegimeV2] Initialized with microstructure=True
+2026-04-21 08:25:19,885 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:25:19,886 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:25:19,886 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:25:19,886 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:25:19,887 [INFO] src.enhanced_data_v2: [EnhancedV2] Initialized with 60s cache, $100,000 whale threshold
+2026-04-21 08:25:19,887 [INFO] src.regime_v2: [RegimeV2] Initialized with microstructure=True
+2026-04-21 08:25:31,317 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:25:31,317 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:25:31,318 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:25:31,318 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:25:31,318 [INFO] src.enhanced_data_v2: [EnhancedV2] Initialized with 60s cache, $100,000 whale threshold
+2026-04-21 08:25:31,318 [INFO] src.regime_v2: [RegimeV2] Initialized with microstructure=True
+2026-04-21 08:25:31,318 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:25:31,318 [INFO] src.risk_manager_v2: [RiskManagerV2] Initialized with microstructure protection
+2026-04-21 08:25:31,318 [INFO] src.engine_v2: [EngineV2] Microstructure features ENABLED (all 30 coins)
+2026-04-21 08:25:42,785 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:25:42,785 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:25:42,786 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:25:42,786 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:25:42,786 [INFO] src.enhanced_data_v2: [EnhancedV2] Initialized with 60s cache, $100,000 whale threshold
+2026-04-21 08:25:42,786 [INFO] src.regime_v2: [RegimeV2] Initialized with microstructure=True
+2026-04-21 08:25:42,786 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:25:42,786 [INFO] src.risk_manager_v2: [RiskManagerV2] Initialized with microstructure protection
+2026-04-21 08:25:42,786 [INFO] src.engine_v2: [EngineV2] Microstructure features ENABLED (all 30 coins)
+2026-04-21 08:25:54,051 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:25:54,051 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:25:54,051 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:25:54,051 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:25:54,051 [INFO] src.enhanced_data_v2: [EnhancedV2] Initialized with 60s cache, $100,000 whale threshold
+2026-04-21 08:25:54,051 [INFO] src.regime_v2: [RegimeV2] Initialized with microstructure=True
+2026-04-21 08:25:54,051 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:25:54,052 [INFO] src.risk_manager_v2: [RiskManagerV2] Initialized with microstructure protection
+2026-04-21 08:25:54,052 [INFO] src.engine_v2: [EngineV2] Microstructure features ENABLED (all 30 coins)
+2026-04-21 08:26:03,462 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:26:03,462 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:26:03,462 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:26:03,462 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:26:03,462 [INFO] src.enhanced_data_v2: [EnhancedV2] Initialized with 60s cache, $100,000 whale threshold
+2026-04-21 08:26:03,462 [INFO] src.regime_v2: [RegimeV2] Initialized with microstructure=True
+2026-04-21 08:26:03,462 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:26:03,462 [INFO] src.risk_manager_v2: [RiskManagerV2] Initialized with microstructure protection
+2026-04-21 08:26:03,462 [INFO] src.engine_v2: [EngineV2] Microstructure features ENABLED (all 30 coins)
+2026-04-21 08:26:05,532 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:26:05,532 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:26:05,533 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:26:05,533 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:26:05,533 [INFO] src.enhanced_data_v2: [EnhancedV2] Initialized with 60s cache, $100,000 whale threshold
+2026-04-21 08:26:05,533 [INFO] src.regime_v2: [RegimeV2] Initialized with microstructure=True
+2026-04-21 08:26:05,533 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:26:05,533 [INFO] src.risk_manager_v2: [RiskManagerV2] Initialized with microstructure protection
+2026-04-21 08:26:05,533 [INFO] src.engine_v2: [EngineV2] Microstructure features ENABLED (all 30 coins)
+2026-04-21 08:26:16,748 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:26:16,748 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:26:16,749 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:26:16,749 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:26:16,749 [INFO] src.enhanced_data_v2: [EnhancedV2] Initialized with 60s cache, $100,000 whale threshold
+2026-04-21 08:26:16,749 [INFO] src.regime_v2: [RegimeV2] Initialized with microstructure=True
+2026-04-21 08:26:16,749 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:26:16,749 [INFO] src.risk_manager_v2: [RiskManagerV2] Initialized with microstructure protection
+2026-04-21 08:26:16,749 [INFO] src.engine_v2: [EngineV2] Microstructure features ENABLED (all 30 coins)
+2026-04-21 08:26:16,749 [INFO] src.engine_v2: [EngineV2] Initialized: 30 symbols, enhanced_symbols=30, microstructure=True
+2026-04-21 08:26:16,749 [INFO] api: [API] ScreeningEngine initialized
+2026-04-21 08:26:16,752 [INFO] apscheduler.scheduler: Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-04-21 08:26:16,753 [INFO] apscheduler.scheduler: Added job "Auto-screen every 15 minutes" to job store "default"
+2026-04-21 08:26:16,753 [INFO] apscheduler.scheduler: Scheduler started
+2026-04-21 08:26:16,753 [INFO] api: [API] Scheduler started — scanning every 15 minutes
+2026-04-21 08:26:16,753 [INFO] api: [API] Next scan at: 08:41:16
+2026-04-21 08:26:17,845 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:26:17,845 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:26:17,845 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:26:17,845 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:26:17,845 [INFO] src.enhanced_data_v2: [EnhancedV2] Initialized with 60s cache, $100,000 whale threshold
+2026-04-21 08:26:17,845 [INFO] src.regime_v2: [RegimeV2] Initialized with microstructure=True
+2026-04-21 08:26:17,845 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:26:17,845 [INFO] src.risk_manager_v2: [RiskManagerV2] Initialized with microstructure protection
+2026-04-21 08:26:17,846 [INFO] src.engine_v2: [EngineV2] Microstructure features ENABLED (all 30 coins)
+2026-04-21 08:26:17,846 [INFO] src.engine_v2: [EngineV2] Initialized: 30 symbols, enhanced_symbols=30, microstructure=True
+2026-04-21 08:26:17,846 [INFO] api: [API] ScreeningEngine initialized
+2026-04-21 08:26:17,848 [INFO] apscheduler.scheduler: Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-04-21 08:26:17,848 [INFO] apscheduler.scheduler: Added job "Auto-screen every 15 minutes" to job store "default"
+2026-04-21 08:26:17,848 [INFO] apscheduler.scheduler: Scheduler started
+2026-04-21 08:26:17,848 [INFO] api: [API] Scheduler started — scanning every 15 minutes
+2026-04-21 08:26:17,848 [INFO] api: [API] Next scan at: 08:41:17
+2026-04-21 08:26:17,849 [INFO] api: [API] Shutting down...
+2026-04-21 08:26:17,849 [INFO] src.enhanced_data_v2: [EnhancedV2] Cache cleared
+2026-04-21 08:26:17,849 [INFO] src.engine_v2: [EngineV2] Closed
+2026-04-21 08:26:17,849 [INFO] api: [API] Shutdown complete
+2026-04-21 08:26:17,849 [INFO] apscheduler.scheduler: Scheduler has been shut down
+2026-04-21 08:26:31,166 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:26:31,166 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:26:31,166 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:26:31,166 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:26:31,166 [INFO] src.enhanced_data_v2: [EnhancedV2] Initialized with 60s cache, $100,000 whale threshold
+2026-04-21 08:26:31,166 [INFO] src.regime_v2: [RegimeV2] Initialized with microstructure=True
+2026-04-21 08:26:31,166 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:26:31,166 [INFO] src.risk_manager_v2: [RiskManagerV2] Initialized with microstructure protection
+2026-04-21 08:26:31,167 [INFO] src.engine_v2: [EngineV2] Microstructure features ENABLED (all 30 coins)
+2026-04-21 08:26:31,167 [INFO] src.engine_v2: [EngineV2] Initialized: 30 symbols, enhanced_symbols=30, microstructure=True
+2026-04-21 08:26:31,167 [INFO] api: [API] ScreeningEngine initialized
+2026-04-21 08:26:31,168 [INFO] apscheduler.scheduler: Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-04-21 08:26:31,168 [INFO] apscheduler.scheduler: Added job "Auto-screen every 15 minutes" to job store "default"
+2026-04-21 08:26:31,168 [INFO] apscheduler.scheduler: Scheduler started
+2026-04-21 08:26:31,168 [INFO] api: [API] Scheduler started — scanning every 15 minutes
+2026-04-21 08:26:31,169 [INFO] api: [API] Next scan at: 08:41:31
+2026-04-21 08:26:36,003 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:26:36,003 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:26:36,004 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:26:36,004 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:26:36,004 [INFO] src.enhanced_data_v2: [EnhancedV2] Initialized with 60s cache, $100,000 whale threshold
+2026-04-21 08:26:36,004 [INFO] src.regime_v2: [RegimeV2] Initialized with microstructure=True
+2026-04-21 08:26:36,004 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:26:36,004 [INFO] src.risk_manager_v2: [RiskManagerV2] Initialized with microstructure protection
+2026-04-21 08:26:36,004 [INFO] src.engine_v2: [EngineV2] Microstructure features ENABLED (all 30 coins)
+2026-04-21 08:26:36,004 [INFO] src.engine_v2: [EngineV2] Initialized: 30 symbols, enhanced_symbols=30, microstructure=True
+2026-04-21 08:26:36,004 [INFO] api: [API] ScreeningEngine initialized
+2026-04-21 08:26:36,005 [INFO] apscheduler.scheduler: Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-04-21 08:26:36,006 [INFO] apscheduler.scheduler: Added job "Auto-screen every 15 minutes" to job store "default"
+2026-04-21 08:26:36,006 [INFO] apscheduler.scheduler: Scheduler started
+2026-04-21 08:26:36,006 [INFO] api: [API] Scheduler started — scanning every 15 minutes
+2026-04-21 08:26:36,006 [INFO] api: [API] Next scan at: 08:41:36
+2026-04-21 08:26:36,006 [INFO] api: [API] Shutting down...
+2026-04-21 08:26:36,006 [INFO] src.enhanced_data_v2: [EnhancedV2] Cache cleared
+2026-04-21 08:26:36,006 [INFO] src.engine_v2: [EngineV2] Closed
+2026-04-21 08:26:36,006 [INFO] api: [API] Shutdown complete
+2026-04-21 08:26:36,007 [INFO] apscheduler.scheduler: Scheduler has been shut down
+2026-04-21 08:26:47,259 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:26:47,259 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:26:47,260 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:26:47,260 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:26:47,260 [INFO] src.enhanced_data_v2: [EnhancedV2] Initialized with 60s cache, $100,000 whale threshold
+2026-04-21 08:26:47,260 [INFO] src.regime_v2: [RegimeV2] Initialized with microstructure=True
+2026-04-21 08:26:47,260 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:26:47,260 [INFO] src.risk_manager_v2: [RiskManagerV2] Initialized with microstructure protection
+2026-04-21 08:26:47,260 [INFO] src.engine_v2: [EngineV2] Microstructure features ENABLED (all 30 coins)
+2026-04-21 08:26:47,260 [INFO] src.engine_v2: [EngineV2] Initialized: 30 symbols, enhanced_symbols=30, microstructure=True
+2026-04-21 08:26:47,260 [INFO] api: [API] ScreeningEngine initialized
+2026-04-21 08:26:47,261 [INFO] apscheduler.scheduler: Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-04-21 08:26:47,262 [INFO] apscheduler.scheduler: Added job "Auto-screen every 15 minutes" to job store "default"
+2026-04-21 08:26:47,262 [INFO] apscheduler.scheduler: Scheduler started
+2026-04-21 08:26:47,262 [INFO] api: [API] Scheduler started — scanning every 15 minutes
+2026-04-21 08:26:47,262 [INFO] api: [API] Next scan at: 08:41:47
+2026-04-21 08:26:47,262 [INFO] api: [API] Shutting down...
+2026-04-21 08:26:47,263 [INFO] src.enhanced_data_v2: [EnhancedV2] Cache cleared
+2026-04-21 08:26:47,263 [INFO] src.engine_v2: [EngineV2] Closed
+2026-04-21 08:26:47,263 [INFO] api: [API] Shutdown complete
+2026-04-21 08:26:47,263 [INFO] apscheduler.scheduler: Scheduler has been shut down
+2026-04-21 08:26:55,236 [INFO] api: [API] Shutting down...
+2026-04-21 08:26:55,237 [INFO] src.enhanced_data_v2: [EnhancedV2] Cache cleared
+2026-04-21 08:26:55,237 [INFO] src.engine_v2: [EngineV2] Closed
+2026-04-21 08:26:55,237 [INFO] api: [API] Shutdown complete
+2026-04-21 08:26:55,237 [INFO] apscheduler.scheduler: Scheduler has been shut down
+2026-04-21 08:26:58,510 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:26:58,511 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:26:58,511 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:26:58,511 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:26:58,511 [INFO] src.enhanced_data_v2: [EnhancedV2] Initialized with 60s cache, $100,000 whale threshold
+2026-04-21 08:26:58,511 [INFO] src.regime_v2: [RegimeV2] Initialized with microstructure=True
+2026-04-21 08:26:58,511 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:26:58,511 [INFO] src.risk_manager_v2: [RiskManagerV2] Initialized with microstructure protection
+2026-04-21 08:26:58,511 [INFO] src.engine_v2: [EngineV2] Microstructure features ENABLED (all 30 coins)
+2026-04-21 08:26:58,511 [INFO] src.engine_v2: [EngineV2] Initialized: 30 symbols, enhanced_symbols=30, microstructure=True
+2026-04-21 08:26:58,511 [INFO] api: [API] ScreeningEngine initialized
+2026-04-21 08:26:58,513 [INFO] apscheduler.scheduler: Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-04-21 08:26:58,513 [INFO] apscheduler.scheduler: Added job "Auto-screen every 15 minutes" to job store "default"
+2026-04-21 08:26:58,513 [INFO] apscheduler.scheduler: Scheduler started
+2026-04-21 08:26:58,513 [INFO] api: [API] Scheduler started — scanning every 15 minutes
+2026-04-21 08:26:58,513 [INFO] api: [API] Next scan at: 08:41:58
+2026-04-21 08:27:20,991 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:27:20,991 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:27:20,992 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:27:20,992 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:27:20,992 [INFO] src.enhanced_data_v2: [EnhancedV2] Initialized with 60s cache, $100,000 whale threshold
+2026-04-21 08:27:20,992 [INFO] src.regime_v2: [RegimeV2] Initialized with microstructure=True
+2026-04-21 08:27:20,992 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:27:20,992 [INFO] src.risk_manager_v2: [RiskManagerV2] Initialized with microstructure protection
+2026-04-21 08:27:20,992 [INFO] src.engine_v2: [EngineV2] Microstructure features ENABLED (all 30 coins)
+2026-04-21 08:27:20,992 [INFO] src.engine_v2: [EngineV2] Initialized: 30 symbols, enhanced_symbols=30, microstructure=True
+2026-04-21 08:27:20,992 [INFO] api: [API] ScreeningEngine initialized
+2026-04-21 08:27:20,994 [INFO] apscheduler.scheduler: Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-04-21 08:27:20,994 [INFO] apscheduler.scheduler: Added job "Auto-screen every 15 minutes" to job store "default"
+2026-04-21 08:27:20,994 [INFO] apscheduler.scheduler: Scheduler started
+2026-04-21 08:27:20,995 [INFO] api: [API] Scheduler started — scanning every 15 minutes
+2026-04-21 08:27:20,995 [INFO] api: [API] Next scan at: 08:42:20
+2026-04-21 08:27:20,995 [INFO] api: [API] Shutting down...
+2026-04-21 08:27:20,995 [INFO] src.enhanced_data_v2: [EnhancedV2] Cache cleared
+2026-04-21 08:27:20,995 [INFO] src.engine_v2: [EngineV2] Closed
+2026-04-21 08:27:20,995 [INFO] api: [API] Shutdown complete
+2026-04-21 08:27:20,995 [INFO] apscheduler.scheduler: Scheduler has been shut down
+2026-04-21 08:29:46,176 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:29:46,176 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:29:46,176 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:29:46,176 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:29:46,176 [INFO] src.enhanced_data_v2: [EnhancedV2] Initialized with 60s cache, $100,000 whale threshold
+2026-04-21 08:29:46,176 [INFO] src.regime_v2: [RegimeV2] Initialized with microstructure=True
+2026-04-21 08:29:46,176 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:29:46,176 [INFO] src.risk_manager_v2: [RiskManagerV2] Initialized with microstructure protection
+2026-04-21 08:29:46,176 [INFO] src.engine_v2: [EngineV2] Microstructure features ENABLED (all 30 coins)
+2026-04-21 08:29:46,176 [INFO] src.engine_v2: [EngineV2] Initialized: 30 symbols, enhanced_symbols=30, microstructure=True
+2026-04-21 08:29:46,176 [INFO] api: [API] ScreeningEngine initialized
+2026-04-21 08:29:46,178 [INFO] apscheduler.scheduler: Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-04-21 08:29:46,178 [INFO] apscheduler.scheduler: Added job "Auto-screen every 15 minutes" to job store "default"
+2026-04-21 08:29:46,178 [INFO] apscheduler.scheduler: Scheduler started
+2026-04-21 08:29:46,178 [INFO] api: [API] Scheduler started — scanning every 15 minutes
+2026-04-21 08:29:46,178 [INFO] api: [API] Next scan at: 08:44:46
+2026-04-21 08:29:46,300 [INFO] src.database: [DB] WAL mode enabled
+2026-04-21 08:29:46,300 [INFO] src.database: [DB] Initialized at data/screener.db
+2026-04-21 08:29:46,301 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:29:46,301 [INFO] src.binance_api: [BinanceAPI] Connected to https://fapi.binance.com
+2026-04-21 08:29:46,301 [INFO] src.enhanced_data_v2: [EnhancedV2] Initialized with 60s cache, $100,000 whale threshold
+2026-04-21 08:29:46,301 [INFO] src.regime_v2: [RegimeV2] Initialized with microstructure=True
+2026-04-21 08:29:46,301 [INFO] src.risk_manager: [RiskManager] Initialized all protectors
+2026-04-21 08:29:46,301 [INFO] src.risk_manager_v2: [RiskManagerV2] Initialized with microstructure protection
+2026-04-21 08:29:46,301 [INFO] src.engine_v2: [EngineV2] Microstructure features ENABLED (all 30 coins)
+2026-04-21 08:29:46,301 [INFO] src.engine_v2: [EngineV2] Initialized: 30 symbols, enhanced_symbols=30, microstructure=True
+2026-04-21 08:29:46,301 [INFO] api: [API] ScreeningEngine initialized
+2026-04-21 08:29:46,302 [INFO] apscheduler.scheduler: Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-04-21 08:29:46,303 [INFO] apscheduler.scheduler: Added job "Auto-screen every 15 minutes" to job store "default"
+2026-04-21 08:29:46,303 [INFO] apscheduler.scheduler: Scheduler started
+2026-04-21 08:29:46,303 [INFO] api: [API] Scheduler started — scanning every 15 minutes
+2026-04-21 08:29:46,303 [INFO] api: [API] Next scan at: 08:44:46
+2026-04-21 08:29:46,303 [INFO] api: [API] Shutting down...
+2026-04-21 08:29:46,303 [INFO] src.enhanced_data_v2: [EnhancedV2] Cache cleared
+2026-04-21 08:29:46,303 [INFO] src.engine_v2: [EngineV2] Closed
+2026-04-21 08:29:46,303 [INFO] api: [API] Shutdown complete
+2026-04-21 08:29:46,303 [INFO] apscheduler.scheduler: Scheduler has been shut down
+2026-04-21 08:30:35,773 [INFO] src.liquidation: [Liquidation] Fetched 36 liquidation events
+2026-04-21 08:31:31,398 [INFO] httpx: HTTP Request: GET https://fapi.binance.com/fapi/v1/ticker/24hr "HTTP/1.1 200 OK"

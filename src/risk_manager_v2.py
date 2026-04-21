@@ -31,15 +31,23 @@ class RiskManagerV2(RiskManager):
     """
     
     def __init__(self, config: RiskConfig = None, db_path: str = "data/screener.db",
-                 enhanced_data: Optional[EnhancedDataV2] = None):
+                 enhanced_data: Optional[EnhancedDataV2] = None,
+                 microstructure_config: Optional[dict] = None):
         super().__init__(config, db_path)
-        self.enhanced = enhanced_data or get_enhanced_v2()
+        self.enhanced = enhanced_data
         
-        # Microstructure thresholds
-        self.liq_cascade_threshold_usd = 1000000  # $1M = cascade warning
-        self.liq_cascade_block_usd = 3000000  # $3M = block trades
-        self.whale_divergence_threshold = 0.2  # 20% divergence
-        self.extreme_sentiment_threshold = 75  # 75+ score = extreme
+        # Load microstructure config
+        micro_config = microstructure_config or {}
+        liq_config = micro_config.get("liquidation", {})
+        whale_config = micro_config.get("whale", {})
+        risk_config = micro_config.get("risk", {})
+        
+        # Microstructure thresholds from config
+        self.liq_cascade_threshold_usd = liq_config.get("cascade_warning_usd", 1000000)
+        self.liq_cascade_block_usd = liq_config.get("cascade_block_usd", 3000000)
+        self.whale_divergence_threshold = whale_config.get("position_flip_threshold", 0.1)
+        self.extreme_sentiment_threshold = risk_config.get("extreme_sentiment_threshold", 75)
+        self.wall_proximity_pct = micro_config.get("orderbook", {}).get("wall_proximity_pct", 1.5)
         
         logger.info("[RiskManagerV2] Initialized with microstructure protection")
     
@@ -271,12 +279,12 @@ class RiskManagerV2(RiskManager):
         resistance_dist = ob.get("resistance_distance_pct")
         
         if signal_type == "LONG":
-            if resistance_dist is not None and resistance_dist < 1.0:
+            if resistance_dist is not None and resistance_dist < self.wall_proximity_pct:
                 result["penalty"] = True
                 result["warning"] = f"RESISTANCE_NEARBY: Strong wall {resistance_dist:.2f}% above entry"
         
         elif signal_type == "SHORT":
-            if support_dist is not None and support_dist < 1.0:
+            if support_dist is not None and support_dist < self.wall_proximity_pct:
                 result["penalty"] = True
                 result["warning"] = f"SUPPORT_NEARBY: Strong wall {support_dist:.2f}% below entry"
         
@@ -347,9 +355,10 @@ _risk_manager_v2: Optional[RiskManagerV2] = None
 
 
 def get_risk_manager_v2(config: RiskConfig = None, db_path: str = "data/screener.db",
-                        enhanced_data: Optional[EnhancedDataV2] = None) -> RiskManagerV2:
+                        enhanced_data: Optional[EnhancedDataV2] = None,
+                        microstructure_config: Optional[dict] = None) -> RiskManagerV2:
     """Get or create RiskManagerV2 singleton."""
     global _risk_manager_v2
     if _risk_manager_v2 is None:
-        _risk_manager_v2 = RiskManagerV2(config, db_path, enhanced_data)
+        _risk_manager_v2 = RiskManagerV2(config, db_path, enhanced_data, microstructure_config)
     return _risk_manager_v2
