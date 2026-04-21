@@ -552,13 +552,28 @@ class ScreeningEngineV2:
         with self._lock:
             if not self._last_result:
                 return None
-            
+
+            # Calculate microstructure stats from last scan results
+            micro_stats = None
+            if self.use_microstructure:
+                blocked_liq = sum(1 for r in self._last_result if r.get("risk_blocked") and "LIQUIDATION" in str(r.get("risk_reason", "")))
+                blocked_div = sum(1 for r in self._last_result if r.get("risk_blocked") and "DIVERGENCE" in str(r.get("risk_reason", "")))
+                total_blocked = sum(1 for r in self._last_result if r.get("risk_blocked"))
+                micro_stats = {
+                    "enabled": True,
+                    "coins_analyzed": sum(1 for r in self._last_result if r.get("microstructure")),
+                    "blocked_by_liquidation": blocked_liq,
+                    "blocked_by_divergence": blocked_div,
+                    "total_blocked": total_blocked
+                }
+
             return {
                 "ok": True,
                 "timestamp": self._last_scan_time or datetime.now().isoformat(),
                 "elapsed_seconds": round(self._last_elapsed, 1),
                 "data": self._last_result,
-                "summary": self._calculate_summary(self._last_result)
+                "summary": self._calculate_summary(self._last_result),
+                "microstructure_stats": micro_stats
             }
 
     def _calculate_summary(self, results: list) -> dict:
@@ -607,6 +622,18 @@ class ScreeningEngineV2:
                 "microstructure_enabled": self.use_microstructure,
                 "last_error": self._last_error
             }
+
+    def get_signals_history(self, limit: int = 100) -> list[dict]:
+        """Get signal history from database with outcomes."""
+        return self.db.get_signals_with_outcomes(limit)
+
+    def get_calendar(self, year: int, month: int) -> list[dict]:
+        """Get calendar view for a month."""
+        return self.db.get_calendar_month(year, month)
+
+    def get_db_stats(self) -> dict:
+        """Get database statistics."""
+        return self.db.get_summary()
 
     # ---- Cache management ----
 

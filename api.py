@@ -502,12 +502,17 @@ async def get_symbol_liquidations(symbol: str):
         return {"ok": False, "error": str(e)}
 
 
-# ---- Dashboard Route (FIXED) ----
+# ---- Dashboard Routes ----
 
 @app.get("/", response_class=FileResponse)
 async def read_root():
     """Serves the main dashboard HTML."""
     return "static/dashboard.html"
+
+@app.get("/v2", response_class=FileResponse)
+async def read_dashboard_v2():
+    """Serves the new V2 dashboard HTML."""
+    return "static/dashboard_new.html"
 
 
 # ---- Run ----

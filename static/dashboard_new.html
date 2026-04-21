@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coin Screener Pro - Win Rate Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background-color: #040608; }
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+        .glass-hover:hover {
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+        .bg-blob-1 {
+            position: fixed;
+            top: -10%;
+            left: -10%;
+            width: 50%;
+            height: 50%;
+            background: rgba(59, 130, 246, 0.05);
+            border-radius: 50%;
+            filter: blur(160px);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .bg-blob-2 {
+            position: fixed;
+            bottom: -10%;
+            right: -10%;
+            width: 50%;
+            height: 50%;
+            background: rgba(245, 158, 11, 0.05);
+            border-radius: 50%;
+            filter: blur(160px);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .tab-active {
+            color: #fbbf24;
+            border-bottom: 3px solid #fbbf24;
+        }
+        .tab-inactive {
+            color: #475569;
+        }
+        .tab-inactive:hover {
+            color: #94a3b8;
+        }
+        .win-positive { color: #10b981; }
+        .win-negative { color: #f43f5e; }
+        .stat-row {
+            border-bottom: 1px dotted rgba(255, 255, 255, 0.1);
+        }
+        .stat-row:hover {
+            border-bottom-color: rgba(255, 255, 255, 0.2);
+        }
+        .calendar-day {
+            aspect-ratio: 1.2/1;
+        }
+        .toggle-btn {
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .toggle-btn.rotated {
+            transform: rotate(180deg);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="text-slate-400 min-h-screen relative overflow-x-hidden">
+    <!-- Background Blobs -->
+    <div class="bg-blob-1"></div>
+    <div class="bg-blob-2"></div>
+
+    <!-- Main Container -->
+    <div class="relative z-10 p-6 md:p-12 max-w-7xl mx-auto">
+        
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight mb-1">Win Rate Analytics</h1>
+                <p class="text-sm text-slate-500">Coin Screener Pro • Microstructure V2 Enabled</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="glass px-4 py-2 rounded-xl">
+                    <span class="text-xs text-slate-500 uppercase tracking-wider">Last Scan</span>
+                    <div class="text-white font-semibold" id="last-scan">—</div>
+                </div>
+                <div class="glass px-4 py-2 rounded-xl">
+                    <span class="text-xs text-slate-500 uppercase tracking-wider">Next Scan</span>
+                    <div class="text-white font-semibold" id="next-scan">—</div>
+                </div>
+                <button id="refresh-btn" class="glass glass-hover p-3 rounded-xl text-white" title="Force Refresh">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="glass glass-hover p-6 rounded-3xl">
+                <div class="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-2">Overall Win Rate</div>
+                <div class="text-3xl font-bold text-white" id="overall-wr">—%</div>
+                <div class="text-xs text-slate-500 mt-1">Based on closed trades</div>
+            </div>
+            <div class="glass glass-hover p-6 rounded-3xl">
+                <div class="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-2">Active Signals</div>
+                <div class="text-3xl font-bold text-white" id="active-signals">—</div>
+                <div class="text-xs text-slate-500 mt-1">LONG & SHORT combined</div>
+            </div>
+            <div class="glass glass-hover p-6 rounded-3xl">
+                <div class="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-2">BULL Regime WR</div>
+                <div class="text-3xl font-bold win-positive" id="bull-wr">—%</div>
+                <div class="text-xs text-slate-500 mt-1">Best performing regime</div>
+            </div>
+            <div class="glass glass-hover p-6 rounded-3xl">
+                <div class="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-2">V2 Blocks</div>
+                <div class="text-3xl font-bold text-amber-400" id="v2-blocks">—</div>
+                <div class="text-xs text-slate-500 mt-1">Liquidation & divergence</div>
+            </div>
+        </div>
+
+        <!-- Time Range Controls -->
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
+            <div class="glass flex p-1.5 rounded-2xl">
+                <button class="time-filter px-6 py-2.5 text-xs font-bold rounded-xl transition-all duration-300 bg-white/10 text-white shadow-lg" data-range="7d">7D</button>
+                <button class="time-filter px-6 py-2.5 text-xs font-bold rounded-xl transition-all duration-300 hover:bg-white/5 hover:text-white text-slate-400" data-range="1m">1M</button>
+                <button class="time-filter px-6 py-2.5 text-xs font-bold rounded-xl transition-all duration-300 hover:bg-white/5 hover:text-white text-slate-400" data-range="3m">3M</button>
+                <button class="time-filter px-6 py-2.5 text-xs font-bold rounded-xl transition-all duration-300 hover:bg-white/5 hover:text-white text-slate-400" data-range="all">ALL</button>
+            </div>
+            
+            <div class="glass flex items-center px-5 py-2.5 rounded-2xl text-xs font-semibold">
+                <span class="text-white" id="date-range-start">—</span>
+                <span class="mx-4 opacity-20">→</span>
+                <span class="text-white" id="date-range-end">—</span>
+            </div>
+        </div>
+
+        <!-- Win Rate Analysis Panel (Collapsible) -->
+        <section class="glass rounded-[2.5rem] p-10 mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-4">
+                    <h2 class="text-xl font-bold text-white tracking-tight">Win Rate Analysis</h2>
+                    <button id="toggle-stats" class="glass px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-2">
+                        <span id="toggle-text">Show Less</span>
+                        <svg id="toggle-icon" class="toggle-btn w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-600"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            </div>
+            
+            <div id="stats-container" class="grid grid-cols-1 md:grid-cols-2 gap-x-24 gap-y-4">
+                <!-- Left Column (Always Visible) -->
+                <div class="space-y-4" id="stats-left">
+                    <div class="stat-row flex justify-between items-center py-2 group cursor-pointer">
+                        <span class="text-[13px] font-medium text-slate-500 group-hover:text-slate-300 transition-colors border-b border-dotted border-slate-700 pb-0.5">Total Wins</span>
+                        <span class="text-[13px] text-white font-bold" id="total-wins">—</span>
+                    </div>
+                    <div class="stat-row flex justify-between items-center py-2 group cursor-pointer">
+                        <span class="text-[13px] font-medium text-slate-500 group-hover:text-slate-300 transition-colors border-b border-dotted border-slate-700 pb-0.5">Total Losses</span>
+                        <span class="text-[13px] text-white font-bold" id="total-losses">—</span>
+                    </div>
+                    <div class="stat-row flex justify-between items-center py-2 group cursor-pointer">
+                        <span class="text-[13px] font-medium text-slate-500 group-hover:text-slate-300 transition-colors border-b border-dotted border-slate-700 pb-0.5">Win Rate</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[13px] text-white font-bold" id="win-rate-stat">—%</span>
+                            <svg class="w-4 h-4 win-positive" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                        </div>
+                    </div>
+                    <div class="stat-row flex justify-between items-center py-2 group cursor-pointer">
+                        <span class="text-[13px] font-medium text-slate-500 group-hover:text-slate-300 transition-colors border-b border-dotted border-slate-700 pb-0.5">Open Positions</span>
+                        <span class="text-[13px] text-white font-bold" id="open-positions">—</span>
+                    </div>
+                </div>
+                
+                <!-- Right Column (Toggleable) -->
+                <div class="space-y-4" id="stats-right">
+                    <div class="stat-row flex justify-between items-center py-2 group cursor-pointer">
+                        <span class="text-[13px] font-medium text-slate-500 group-hover:text-slate-300 transition-colors border-b border-dotted border-slate-700 pb-0.5">LONG Win Rate</span>
+                        <span class="text-[13px] text-white font-bold" id="long-wr">—%</span>
+                    </div>
+                    <div class="stat-row flex justify-between items-center py-2 group cursor-pointer">
+                        <span class="text-[13px] font-medium text-slate-500 group-hover:text-slate-300 transition-colors border-b border-dotted border-slate-700 pb-0.5">SHORT Win Rate</span>
+                        <span class="text-[13px] text-white font-bold" id="short-wr">—%</span>
+                    </div>
+                    <div class="stat-row flex justify-between items-center py-2 group cursor-pointer">
+                        <span class="text-[13px] font-medium text-slate-500 group-hover:text-slate-300 transition-colors border-b border-dotted border-slate-700 pb-0.5">BULL Regime WR</span>
+                        <span class="text-[13px] win-positive font-bold" id="bull-regime-wr">—%</span>
+                    </div>
+                    <div class="stat-row flex justify-between items-center py-2 group cursor-pointer">
+                        <span class="text-[13px] font-medium text-slate-500 group-hover:text-slate-300 transition-colors border-b border-dotted border-slate-700 pb-0.5">SIDEWAYS Regime WR</span>
+                        <span class="text-[13px] text-white font-bold" id="sideways-regime-wr">—%</span>
+                    </div>
+                    <div class="stat-row flex justify-between items-center py-2 group cursor-pointer">
+                        <span class="text-[13px] font-medium text-slate-500 group-hover:text-slate-300 transition-colors border-b border-dotted border-slate-700 pb-0.5">Signals Blocked (V2)</span>
+                        <span class="text-[13px] text-amber-400 font-bold" id="blocked-signals">—</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tabs -->
+        <div class="flex gap-10 border-b border-white/5 px-4 mb-8">
+            <button class="tab-btn pb-5 text-[14px] font-bold transition-all duration-300 relative tab-active" data-tab="overview">Overview</button>
+            <button class="tab-btn pb-5 text-[14px] font-bold transition-all duration-300 relative tab-inactive" data-tab="history">Signal History</button>
+            <button class="tab-btn pb-5 text-[14px] font-bold transition-all duration-300 relative tab-inactive" data-tab="microstructure">Microstructure</button>
+        </div>
+
+        <!-- Overview Tab -->
+        <div id="tab-overview" class="tab-content">
+            <!-- Calendar Section -->
+            <section class="glass rounded-[2.5rem] p-10 mb-8">
+                <div class="flex justify-between items-center mb-8">
+                    <div class="flex items-center gap-5">
+                        <h3 class="text-xl font-bold text-white">Daily Win Rate</h3>
+                        <div class="glass flex items-center bg-white/5 px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer hover:bg-white/10 transition-all border border-white/5">
+                            <span class="text-white mr-3" id="calendar-month">April 2026</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-500"><path d="m6 9 6 6 6-6"/></svg>
+                        </div>
+                    </div>
+                    
+                    <div class="flex bg-black/30 rounded-2xl p-1.5 border border-white/5">
+                        <button class="p-2.5 text-slate-600 hover:text-white transition-all chart-toggle" data-type="chart">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                        </button>
+                        <button class="p-2.5 text-yellow-400 bg-white/10 rounded-xl shadow-md chart-toggle" data-type="calendar">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Weekday Headers -->
+                <div class="grid grid-cols-7 gap-4 text-center text-[11px] font-black text-slate-600 uppercase tracking-[0.2em] mb-4">
+                    <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                </div>
+
+                <!-- Calendar Grid -->
+                <div id="calendar-grid" class="grid grid-cols-7 gap-4">
+                    <!-- Calendar cells will be populated by JS -->
+                </div>
+            </section>
+
+            <!-- Active Signals Table -->
+            <section class="glass rounded-[2.5rem] p-10">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-white">Signals Overview</h3>
+                    <div class="flex items-center gap-3">
+                        <div class="text-sm text-slate-500" id="signals-count">—</div>
+                        <div class="flex items-center gap-1.5">
+                            <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                            <span class="text-xs text-slate-400">Active</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <div class="w-2 h-2 rounded-full bg-amber-500"></div>
+                            <span class="text-xs text-slate-400">Blocked</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-[11px] font-black text-slate-600 uppercase tracking-[0.15em] border-b border-white/10">
+                                <th class="text-left py-4 px-4">Coin</th>
+                                <th class="text-left py-4 px-4">Signal</th>
+                                <th class="text-left py-4 px-4">Price</th>
+                                <th class="text-left py-4 px-4">Confidence</th>
+                                <th class="text-left py-4 px-4">Regime</th>
+                                <th class="text-left py-4 px-4">Risk</th>
+                                <th class="text-left py-4 px-4">Entry/SL/TP</th>
+                                <th class="text-left py-4 px-4">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="signals-tbody">
+                            <!-- Signals will be populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- Signal History Tab -->
+        <div id="tab-history" class="tab-content hidden">
+            <section class="glass rounded-[2.5rem] p-10">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-white">Signal History</h3>
+                    <div class="flex gap-2">
+                        <button class="filter-btn glass px-4 py-2 rounded-xl text-xs font-bold active" data-filter="all">All</button>
+                        <button class="filter-btn glass px-4 py-2 rounded-xl text-xs font-bold text-slate-400" data-filter="win">Wins</button>
+                        <button class="filter-btn glass px-4 py-2 rounded-xl text-xs font-bold text-slate-400" data-filter="loss">Losses</button>
+                    </div>
+                </div>
+                <div id="history-container" class="space-y-3">
+                    <!-- History items populated by JS -->
+                </div>
+            </section>
+        </div>
+
+        <!-- Microstructure Tab -->
+        <div id="tab-microstructure" class="tab-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Liquidations Panel -->
+                <section class="glass rounded-[2.5rem] p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-bold text-white">Liquidations (15m)</h3>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-slate-500" id="liq-updated">—</span>
+                            <button onclick="refreshLiquidations()" class="p-2 rounded-lg hover:bg-white/10 transition-colors" title="Refresh">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="liquidations-container" class="space-y-4">
+                        <div class="text-center text-slate-500 py-8">Click refresh to load liquidation data</div>
+                    </div>
+                </section>
+
+                <!-- Whale Activity Panel -->
+                <section class="glass rounded-[2.5rem] p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-bold text-white">Whale Activity</h3>
+                        <span class="text-xs text-slate-500">Position Ratio</span>
+                    </div>
+                    <div id="whale-container" class="space-y-4">
+                        <div class="text-center text-slate-500 py-8">Loading...</div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ============================================
+        // PERFORMANCE-OPTIMIZED DASHBOARD
+        // ============================================
+
+        // Global State with caching
+        const state = {
+            activeTab: 'overview',
+            timeRange: '7d',
+            statsExpanded: true,
+            scanData: null,
+            dbStats: null,
+            historyData: null,
+            calendarYear: new Date().getFullYear(),
+            calendarMonth: new Date().getMonth() + 1,
+            // Cache for comparison
+            _cache: {
+                scanHash: null,
+                statsHash: null,
+                historyHash: null,
+                lastFetch: 0
+            },
+            // Loading states
+            _loading: {
+                scan: false,
+                stats: false,
+                history: false
+            },
+            // Lazy loading flags
+            _loaded: {
+                microstructure: false
+            }
+        };
+
+        // Request deduplication registry
+        const activeRequests = new Map();
+
+        // API Helper with timeout and deduplication
+        async function api(endpoint, timeout = 8000) {
+            // Cancel existing request for same endpoint
+            if (activeRequests.has(endpoint)) {
+                activeRequests.get(endpoint).abort();
+                activeRequests.delete(endpoint);
+            }
+
+            const controller = new AbortController();
+            activeRequests.set(endpoint, controller);
+
+            try {
+                const timeoutId = setTimeout(() => controller.abort(), timeout);
+                const response = await fetch(endpoint, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                activeRequests.delete(endpoint);
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.json();
+            } catch (e) {
+                activeRequests.delete(endpoint);
+                if (e.name === 'AbortError') {
+                    return { ok: false, error: 'Request cancelled' };
+                }
+                console.error(`API Error ${endpoint}:`, e);
+                return { ok: false, error: e.message };
+            }
+        }
+
+        // Fast hash for data comparison
+        function fastHash(obj) {
+            if (!obj) return '';
+            const str = JSON.stringify(obj);
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return hash.toString(16);
+        }
+
+        // Format Helpers
+        const formatPercent = (val) => `${(val || 0).toFixed(1)}%`;
+        const formatNumber = (val) => (val || 0).toLocaleString();
+
+        // XSS Protection - Escape HTML
+        function escapeHtml(text) {
+            if (text === null || text === undefined) return '';
+            const div = document.createElement('div');
+            div.textContent = String(text);
+            return div.innerHTML;
+        }
+
+        // ============================================
+        // PARALLEL DATA LOADING
+        // ============================================
+        async function loadDashboard() {
+            const now = Date.now();
+            // Debounce: don't fetch more than once every 5 seconds
+            if (now - state._cache.lastFetch < 5000) {
+                console.log('[Dashboard] Skipping fetch (debounce)');
+                return;
+            }
+            state._cache.lastFetch = now;
+
+            console.log('[Dashboard] Loading data in parallel...');
+            const startTime = performance.now();
+
+            // Fetch all APIs IN PARALLEL (not sequential!)
+            const [scan, dbStats, history, status] = await Promise.all([
+                api('/api/scan/latest'),
+                api('/api/db/stats'),
+                api('/api/signals/history?limit=50'), // Reduced from 100
+                api('/api/status')
+            ]);
+
+            console.log(`[Dashboard] All APIs fetched in ${(performance.now() - startTime).toFixed(0)}ms`);
+
+            // Update scan data (with hash check)
+            if (scan.ok) {
+                const scanHash = fastHash(scan.data);
+                if (scanHash !== state._cache.scanHash) {
+                    state._cache.scanHash = scanHash;
+                    state.scanData = scan;
+                    updateSummaryCards(scan);
+                    updateSignalsTable(scan.data);
+                } else {
+                    console.log('[Dashboard] Scan data unchanged, skipping render');
+                }
+            } else if (!state.scanData) {
+                // Only show error on first load
+                document.getElementById('signals-tbody').innerHTML = `
+                    <tr><td colspan="7" class="py-8 text-center text-slate-500">
+                        No scan data. <button onclick="forceRefresh()" class="text-amber-400 hover:underline">Run scan</button>
+                    </td></tr>
+                `;
+            }
+
+            // Update DB stats
+            if (dbStats.ok && dbStats.stats) {
+                const statsHash = fastHash(dbStats.stats);
+                if (statsHash !== state._cache.statsHash) {
+                    state._cache.statsHash = statsHash;
+                    state.dbStats = dbStats.stats;
+                    updateWinRateStats(dbStats.stats);
+                }
+            }
+
+            // Update history (reduced limit for performance)
+            if (history.ok && history.data) {
+                const historyHash = fastHash(history.data.slice(0, 10)); // Compare only first 10
+                if (historyHash !== state._cache.historyHash) {
+                    state._cache.historyHash = historyHash;
+                    state.historyData = history.data;
+                    updateCalendar(history.data);
+                    updateHistory(history.data);
+                }
+            }
+
+            // Update status
+            if (status.ok) {
+                updateStatus(status);
+            }
+
+            console.log(`[Dashboard] Total load time: ${(performance.now() - startTime).toFixed(0)}ms`);
+        }
+
+        // Force refresh / trigger scan
+        async function forceRefresh() {
+            console.log('[Dashboard] Triggering scan...');
+            const result = await api('/api/refresh');
+            console.log('[Dashboard] Refresh result:', result);
+            if (result.ok) {
+                setTimeout(loadDashboard, 2000); // Reload after 2s
+            }
+        }
+
+        // Update Summary Cards
+        function updateSummaryCards(scan) {
+            const summary = scan.summary || {};
+            const micro = scan.microstructure_stats;
+            const data = scan.data || [];
+            
+            document.getElementById('active-signals').textContent = 
+                (summary.long || 0) + (summary.short || 0);
+            
+            // V2 Blocks: show blocked count from microstructure_stats or summary
+            const blocked = summary.blocked_by_risk || 0;
+            if (micro) {
+                const totalBlocks = micro.blocked_by_liquidation + micro.blocked_by_divergence;
+                document.getElementById('v2-blocks').textContent = 
+                    totalBlocks > 0 ? totalBlocks : blocked;
+            } else if (blocked > 0) {
+                document.getElementById('v2-blocks').textContent = blocked;
+            }
+
+            // Also show total coins count
+            const totalCoins = data.length || summary.total || 0;
+            document.getElementById('active-signals').textContent = 
+                `${(summary.long || 0) + (summary.short || 0)} active · ${totalCoins} coins`;
+        }
+
+        // Update Win Rate Stats
+        function updateWinRateStats(stats) {
+            // Validate input
+            if (!stats || typeof stats !== 'object') {
+                console.warn('Invalid stats data received');
+                return;
+            }
+
+            const wins = Number(stats.wins) || 0;
+            const losses = Number(stats.losses) || 0;
+            const total = wins + losses;
+            const wr = total > 0 ? (wins / total * 100) : 0;
+
+            document.getElementById('overall-wr').textContent = formatPercent(wr);
+            document.getElementById('win-rate-stat').textContent = formatPercent(wr);
+            document.getElementById('total-wins').textContent = formatNumber(wins);
+            document.getElementById('total-losses').textContent = formatNumber(losses);
+            document.getElementById('open-positions').textContent = formatNumber(stats.open || stats.open_count || 0);
+            
+            // Regime WR - calculate from available data if possible
+            // For now, show "—" until regime-specific stats API is available
+            document.getElementById('bull-wr').textContent = '—%';
+            document.getElementById('bull-regime-wr').textContent = '—%';
+            document.getElementById('sideways-regime-wr').textContent = '—%';
+
+            // Signal stats - OPTIMIZED: single pass instead of 4 filters
+            if (state.historyData && state.historyData.length > 0) {
+                let longTotal = 0, longWins = 0, shortTotal = 0, shortWins = 0;
+
+                for (const h of state.historyData) {
+                    if (h.result === 'WIN' || h.result === 'LOSS') {
+                        if (h.signal === 'LONG') {
+                            longTotal++;
+                            if (h.result === 'WIN') longWins++;
+                        } else if (h.signal === 'SHORT') {
+                            shortTotal++;
+                            if (h.result === 'WIN') shortWins++;
+                        }
+                    }
+                }
+
+                document.getElementById('long-wr').textContent = longTotal > 0 ? formatPercent(longWins / longTotal * 100) : '—%';
+                document.getElementById('short-wr').textContent = shortTotal > 0 ? formatPercent(shortWins / shortTotal * 100) : '—%';
+            } else {
+                document.getElementById('long-wr').textContent = '—%';
+                document.getElementById('short-wr').textContent = '—%';
+            }
+        }
+
+        // Update Status
+        function updateStatus(status) {
+            document.getElementById('last-scan').textContent = 
+                status.last_scan ? new Date(status.last_scan).toLocaleTimeString() : '—';
+            document.getElementById('next-scan').textContent = 
+                status.next_scan ? new Date(status.next_scan).toLocaleTimeString() : '—';
+            
+            // Date range
+            const today = new Date();
+            const start = new Date(today);
+            start.setDate(start.getDate() - 7);
+            document.getElementById('date-range-start').textContent = start.toISOString().split('T')[0];
+            document.getElementById('date-range-end').textContent = today.toISOString().split('T')[0];
+        }
+
+// DOM Cache for signals table
+        const signalsCache = {
+            hash: null,
+            html: null,
+            count: 0
+        };
+
+        // Update Signals Table - Shows active + blocked signals
+        function updateSignalsTable(signals) {
+            // Validate input
+            if (!Array.isArray(signals)) {
+                console.warn('Invalid signals data received');
+                document.getElementById('signals-tbody').innerHTML = `
+                    <tr><td colspan="8" class="py-8 text-center text-slate-500">Error loading signals</td></tr>
+                `;
+                return;
+            }
+
+            // Separate active (LONG/SHORT) and blocked signals
+            const active = [];
+            const blocked = [];
+            for (const s of signals) {
+                if (s.signal === 'LONG' || s.signal === 'SHORT') {
+                    active.push(s);
+                } else if (s.risk_blocked) {
+                    blocked.push(s);
+                }
+            }
+
+            // Show active first, then top blocked by score
+            const displaySignals = [...active, ...blocked.sort((a, b) => (b.score || 0) - (a.score || 0)).slice(0, 10)].slice(0, 15);
+
+            document.getElementById('signals-count').textContent = `${active.length} active · ${blocked.length} blocked`;
+
+            if (displaySignals.length === 0) {
+                const emptyHtml = `<tr><td colspan="8" class="py-8 text-center text-slate-500">No scan data available. <button onclick="forceRefresh()" class="text-amber-400 hover:underline">Run scan</button></td></tr>`;
+                if (signalsCache.html !== emptyHtml) {
+                    signalsCache.html = emptyHtml;
+                    document.getElementById('signals-tbody').innerHTML = emptyHtml;
+                }
+                return;
+            }
+
+            // Generate hash for comparison (only check essential fields)
+            const currentHash = fastHash(displaySignals.map(s => ({
+                sym: s.symbol,
+                sig: s.signal,
+                p: s.price,
+                c: s.confidence,
+                r: s.risk_score,
+                rb: s.risk_blocked
+            })));
+
+            // Skip render if data unchanged
+            if (currentHash === signalsCache.hash) {
+                console.log('[Dashboard] Signals unchanged, skipping render');
+                return;
+            }
+
+            // Format price helper
+            const formatPrice = (p) => {
+                if (!p || p === 0) return '—';
+                if (p >= 1000) return p.toFixed(2);
+                if (p >= 1) return p.toFixed(4);
+                return p.toFixed(6);
+            };
+
+            // Build HTML
+            let html = '';
+            for (const s of displaySignals) {
+                const isActive = s.signal === 'LONG' || s.signal === 'SHORT';
+                const isBlocked = s.risk_blocked;
+                const signalColor = s.signal === 'LONG' ? 'win-positive' : s.signal === 'SHORT' ? 'win-negative' : 'text-slate-500';
+                const regime = s.regime?.regime || s.regime || 'SIDEWAYS';
+                const risk = s.risk_score || 0;
+                const price = s.price || s.entry_price || 0;
+                const entry = s.entry || s.entry_price || price;
+                const sl = s.sl || 0;
+                const tp = s.tp || 0;
+
+                let statusBadge = '';
+                if (isBlocked) {
+                    const reason = s.risk_reason || '';
+                    const shortReason = reason.length > 30 ? reason.substring(0, 30) + '…' : reason;
+                    statusBadge = `<td class="py-4 px-4"><span class="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-1 rounded font-semibold">BLOCKED</span><div class="text-[9px] text-slate-500 mt-1 max-w-[120px] truncate" title="${escapeHtml(reason)}">${escapeHtml(shortReason)}</div></td>`;
+                } else if (isActive) {
+                    statusBadge = `<td class="py-4 px-4"><span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded font-semibold">ACTIVE</span></td>`;
+                } else {
+                    statusBadge = `<td class="py-4 px-4"><span class="text-[10px] bg-slate-500/20 text-slate-400 px-2 py-1 rounded font-semibold">WAIT</span></td>`;
+                }
+
+                const rowOpacity = isBlocked ? 'opacity-70' : '';
+
+                html += `<tr class="border-b border-white/5 hover:bg-white/[0.02] transition-colors ${rowOpacity}">
+                    <td class="py-4 px-4"><span class="text-white font-bold text-sm">${escapeHtml(s.symbol || '—')}</span></td>
+                    <td class="py-4 px-4"><span class="${signalColor} font-bold">${escapeHtml(s.signal)}</span></td>
+                    <td class="py-4 px-4 text-slate-300 text-sm">$${formatPrice(price)}</td>
+                    <td class="py-4 px-4 text-white">${escapeHtml(s.confidence || 0)}%</td>
+                    <td class="py-4 px-4 text-slate-400 text-xs">${escapeHtml(regime)}</td>
+                    <td class="py-4 px-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-12 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                <div class="h-full ${risk > 70 ? 'bg-emerald-500' : risk > 40 ? 'bg-yellow-500' : 'bg-rose-500'}" style="width: ${Math.min(risk, 100)}%"></div>
+                            </div>
+                            <span class="text-[10px] text-slate-500">${risk}</span>
+                        </div>
+                    </td>
+                    <td class="py-4 px-4 text-[10px] text-slate-400">
+                        <div class="flex flex-col gap-0.5">
+                            <span class="${entry && entry !== price ? 'text-emerald-400' : 'text-slate-500'}">E: $${formatPrice(entry)}</span>
+                            <span class="${sl ? 'text-rose-400' : 'text-slate-600'}">S: $${formatPrice(sl)}</span>
+                            <span class="${tp ? 'text-blue-400' : 'text-slate-600'}">T: $${formatPrice(tp)}</span>
+                        </div>
+                    </td>
+                    ${statusBadge}
+                </tr>`;
+            }
+
+            // Update cache and DOM
+            signalsCache.hash = currentHash;
+            signalsCache.html = html;
+            signalsCache.count = displaySignals.length;
+            document.getElementById('signals-tbody').innerHTML = html;
+        }
+
+        // Calendar cache
+        const calendarCache = {
+            hash: null,
+            month: null,
+            year: null
+        };
+
+        // Update Calendar - OPTIMIZED
+        function updateCalendar(historyData) {
+            // Validate input
+            if (!Array.isArray(historyData)) {
+                console.warn('Invalid calendar data received');
+                return;
+            }
+
+            const year = state.calendarYear;
+            const month = state.calendarMonth;
+
+            // Skip if month/year unchanged and we have cached HTML
+            if (year === calendarCache.year && month === calendarCache.month && calendarCache.hash) {
+                // Still need to check if history data changed for this month
+                const currentHash = fastHash(historyData.slice(0, 20)); // Check first 20 only
+                if (currentHash === calendarCache.hash) {
+                    console.log('[Dashboard] Calendar unchanged, skipping render');
+                    return;
+                }
+                calendarCache.hash = currentHash;
+            } else {
+                calendarCache.year = year;
+                calendarCache.month = month;
+                calendarCache.hash = fastHash(historyData.slice(0, 20));
+            }
+
+            const grid = document.getElementById('calendar-grid');
+
+            // Get first day and days in month
+            const firstDay = new Date(year, month - 1, 1).getDay();
+            const daysInMonth = new Date(year, month, 0).getDate();
+
+            // Group history by date - only process relevant dates
+            const monthPrefix = `${year}-${String(month).padStart(2, '0')}`;
+            const dateMap = {};
+            for (const item of historyData) {
+                const date = item.timestamp ? item.timestamp.split('T')[0] : null;
+                if (date && date.startsWith(monthPrefix)) {
+                    if (!dateMap[date]) dateMap[date] = { wins: 0, losses: 0, total: 0 };
+                    dateMap[date].total++;
+                    if (item.result === 'WIN') dateMap[date].wins++;
+                    else if (item.result === 'LOSS') dateMap[date].losses++;
+                }
+            }
+
+            // Build calendar
+            let html = '';
+
+            // Empty cells before month starts
+            for (let i = 0; i < firstDay; i++) {
+                html += '<div class="calendar-day"></div>';
+            }
+
+            // Days
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${monthPrefix}-${String(day).padStart(2, '0')}`;
+                const data = dateMap[dateStr];
+
+                let wr = null;
+                let bgClass = 'bg-white/[0.02] border border-white/5';
+                let textClass = 'text-slate-600';
+
+                if (data && data.total > 0) {
+                    wr = (data.wins / data.total * 100).toFixed(1);
+                    const wrNum = parseFloat(wr);
+                    if (wrNum >= 60) {
+                        bgClass = 'bg-emerald-500/[0.08] border border-emerald-500/20';
+                        textClass = 'text-emerald-400';
+                    } else if (wrNum >= 40) {
+                        bgClass = 'bg-yellow-500/[0.08] border border-yellow-500/20';
+                        textClass = 'text-yellow-400';
+                    } else {
+                        bgClass = 'bg-rose-500/[0.08] border border-rose-500/20';
+                        textClass = 'text-rose-500';
+                    }
+                }
+
+                html += `<div class="calendar-day rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all duration-300 hover:scale-105 ${bgClass}"><span class="text-[10px] absolute top-2 right-3 font-bold opacity-30 text-slate-500">${day}</span>${wr !== null ? `<span class="text-[14px] font-bold ${textClass}">${wr}%</span>` : ''}</div>`;
+            }
+
+            grid.innerHTML = html;
+            document.getElementById('calendar-month').textContent =
+                new Date(year, month - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        }
+
+        // History cache
+        const historyCache = {
+            hash: null,
+            html: null
+        };
+
+        // Update History - OPTIMIZED
+        function updateHistory(historyData) {
+            // Validate input
+            if (!Array.isArray(historyData)) {
+                console.warn('Invalid history data received');
+                document.getElementById('history-container').innerHTML = `<div class="text-center text-slate-500 py-8">Error loading history</div>`;
+                return;
+            }
+
+            // Generate hash from first 20 items (sufficient for comparison)
+            const itemsToHash = historyData.slice(0, 20).map(h => ({
+                id: h.id,
+                r: h.result,
+                pnl: h.pnl_pct
+            }));
+            const currentHash = fastHash(itemsToHash);
+
+            // Skip if unchanged
+            if (currentHash === historyCache.hash) {
+                console.log('[Dashboard] History unchanged, skipping render');
+                return;
+            }
+
+            const container = document.getElementById('history-container');
+
+            // Single pass: collect closed and count open
+            const closed = [];
+            let openCount = 0;
+            for (const h of historyData) {
+                if (h.result === 'WIN' || h.result === 'LOSS') {
+                    if (closed.length < 20) closed.push(h);
+                } else if (h.result === 'OPEN' || h.result === 'PENDING') {
+                    openCount++;
+                }
+            }
+
+            if (closed.length === 0) {
+                const emptyHtml = `<div class="text-center text-slate-500 py-8">No closed trades yet. Signals will be tracked here once they hit SL/TP.</div>`;
+                historyCache.hash = currentHash;
+                historyCache.html = emptyHtml;
+                container.innerHTML = emptyHtml;
+                document.getElementById('blocked-signals').textContent = openCount;
+                return;
+            }
+
+            // Build HTML
+            let html = '';
+            for (const h of closed) {
+                const isWin = h.result === 'WIN';
+                const colorClass = isWin ? 'win-positive' : 'win-negative';
+                const pnl = h.pnl_pct || 0;
+                const date = h.timestamp ? h.timestamp.split('T')[0] : '—';
+                const symbol = h.symbol || '—';
+                const signalColor = h.signal === 'LONG' ? 'text-emerald-400' : 'text-rose-400';
+
+                html += `<div class="glass p-4 rounded-2xl flex items-center justify-between hover:bg-white/[0.05] transition-colors"><div class="flex items-center gap-4"><div class="w-10 h-10 rounded-xl ${isWin ? 'bg-emerald-500/20' : 'bg-rose-500/20'} flex items-center justify-center"><span class="text-lg">${isWin ? '✅' : '❌'}</span></div><div><div class="text-white font-semibold text-sm"><span class="text-amber-400">${escapeHtml(symbol)}</span><span class="mx-1">•</span><span class="${signalColor}">${escapeHtml(h.signal)}</span></div><div class="text-xs text-slate-500">${escapeHtml(date)} • ${escapeHtml(h.regime || 'SIDEWAYS')}</div></div></div><div class="text-right"><div class="${colorClass} font-bold">${isWin ? '+' : ''}${pnl.toFixed(1)}%</div><div class="text-xs text-slate-500">${h.confidence || 0}% conf</div></div></div>`;
+            }
+
+            // Update cache and DOM
+            historyCache.hash = currentHash;
+            historyCache.html = html;
+            container.innerHTML = html;
+            document.getElementById('blocked-signals').textContent = openCount;
+        }
+
+        // Smart Polling Manager
+        const pollManager = {
+            interval: null,
+            baseInterval: 60000, // Start with 60s (not 30s)
+            maxInterval: 300000, // Max 5 minutes
+            currentInterval: 60000,
+            consecutiveErrors: 0,
+
+            start() {
+                this.stop();
+                this.tick();
+                this.interval = setInterval(() => this.tick(), this.currentInterval);
+                console.log(`[Dashboard] Polling started: ${this.currentInterval / 1000}s interval`);
+            },
+
+            stop() {
+                if (this.interval) {
+                    clearInterval(this.interval);
+                    this.interval = null;
+                }
+            },
+
+            async tick() {
+                // Don't poll if tab is hidden (save resources)
+                if (document.hidden) {
+                    console.log('[Dashboard] Tab hidden, skipping poll');
+                    return;
+                }
+
+                try {
+                    await loadDashboard();
+                    this.consecutiveErrors = 0;
+                    // Gradually increase interval up to max
+                    this.currentInterval = Math.min(this.currentInterval * 1.1, this.maxInterval);
+                } catch (e) {
+                    this.consecutiveErrors++;
+                    // Exponential backoff on error
+                    this.currentInterval = Math.min(
+                        this.baseInterval * Math.pow(2, this.consecutiveErrors),
+                        this.maxInterval
+                    );
+                    console.log(`[Dashboard] Error #${this.consecutiveErrors}, backoff: ${this.currentInterval / 1000}s`);
+                }
+
+                // Reset interval with new timing
+                this.stop();
+                this.interval = setInterval(() => this.tick(), this.currentInterval);
+            },
+
+            // Reset to fast polling temporarily (e.g., after user action)
+            reset() {
+                this.currentInterval = this.baseInterval;
+                this.consecutiveErrors = 0;
+                this.stop();
+                this.tick();
+                this.interval = setInterval(() => this.tick(), this.currentInterval);
+            }
+        };
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initial load
+            loadDashboard();
+
+            // Smart polling (not aggressive setInterval!)
+            pollManager.start();
+
+            // Pause polling when tab not visible
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    console.log('[Dashboard] Tab hidden, pausing polls');
+                    pollManager.stop();
+                } else {
+                    console.log('[Dashboard] Tab visible, resuming polls');
+                    loadDashboard(); // Immediate refresh
+                    pollManager.start();
+                }
+            });
+
+            // Refresh button
+            document.getElementById('refresh-btn').addEventListener('click', () => {
+                pollManager.reset();
+                forceRefresh();
+            });
+            
+            // Stats toggle
+            const toggleBtn = document.getElementById('toggle-stats');
+            const statsRight = document.getElementById('stats-right');
+            const toggleText = document.getElementById('toggle-text');
+            const toggleIcon = document.getElementById('toggle-icon');
+            
+            toggleBtn.addEventListener('click', () => {
+                state.statsExpanded = !state.statsExpanded;
+                statsRight.style.display = state.statsExpanded ? 'block' : 'none';
+                toggleText.textContent = state.statsExpanded ? 'Show Less' : 'Show More';
+                toggleIcon.classList.toggle('rotated', !state.statsExpanded);
+            });
+            
+            // Time filter buttons
+            document.querySelectorAll('.time-filter').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.time-filter').forEach(b => {
+                        b.classList.remove('bg-white/10', 'text-white', 'shadow-lg');
+                        b.classList.add('text-slate-400');
+                    });
+                    e.target.classList.add('bg-white/10', 'text-white', 'shadow-lg');
+                    e.target.classList.remove('text-slate-400');
+                    state.timeRange = e.target.dataset.range;
+                });
+            });
+            
+            // Tab buttons - COMBINED with lazy loading
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const tabName = e.target.dataset.tab;
+
+                    // Update tab styling
+                    document.querySelectorAll('.tab-btn').forEach(b => {
+                        b.classList.remove('tab-active');
+                        b.classList.add('tab-inactive');
+                    });
+                    e.target.classList.remove('tab-inactive');
+                    e.target.classList.add('tab-active');
+
+                    // Show/hide content
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+
+                    // Lazy load microstructure data only when tab is clicked
+                    if (tabName === 'microstructure') {
+                        loadMicrostructureData();
+                    }
+                });
+            });
+
+            // History filter
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.filter-btn').forEach(b => {
+                        b.classList.remove('active', 'bg-white/20', 'text-white');
+                        b.classList.add('text-slate-400');
+                    });
+                    e.target.classList.add('active', 'bg-white/20', 'text-white');
+                    e.target.classList.remove('text-slate-400');
+
+                    // Filter history
+                    const filter = e.target.dataset.filter;
+                    filterHistory(filter);
+                });
+            });
+        });
+
+        // Refresh Liquidations
+        async function refreshLiquidations() {
+            console.log('[Dashboard] Refreshing liquidations...');
+            document.getElementById('liquidations-container').innerHTML = `
+                <div class="text-center text-slate-500 py-8">
+                    <svg class="animate-spin h-5 w-5 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Loading liquidation data...
+                </div>
+            `;
+
+            // Force refresh via API
+            await api('/api/liquidations/refresh');
+
+            // Load updated data
+            await loadMicrostructureData();
+        }
+
+        // Load Microstructure Data (Liquidations & Whale) - LAZY LOADED
+        async function loadMicrostructureData(force = false) {
+            // Only load once unless forced
+            if (state._loaded.microstructure && !force) {
+                console.log('[Dashboard] Microstructure already loaded, skipping');
+                return;
+            }
+
+            console.log('[Dashboard] Loading microstructure data...');
+            state._loaded.microstructure = true;
+
+            // Load liquidations
+            const liqRes = await api('/api/liquidations');
+            console.log('[Dashboard] Liquidations:', liqRes);
+            if (liqRes.ok) {
+                updateLiquidations(liqRes);
+            } else {
+                document.getElementById('liquidations-container').innerHTML = `
+                    <div class="text-center text-slate-500 py-8">No liquidation data available</div>
+                `;
+            }
+
+            // Whale data comes from scan data (microstructure field)
+            if (state.scanData && state.scanData.data) {
+                updateWhaleData(state.scanData.data);
+            } else {
+                document.getElementById('whale-container').innerHTML = `
+                    <div class="text-center text-slate-500 py-8">No whale data available. Run a scan first.</div>
+                `;
+            }
+        }
+
+        // Update Liquidations Panel
+        function updateLiquidations(data) {
+            const container = document.getElementById('liquidations-container');
+            const heatmap = data.heatmap || [];
+
+            // Update timestamp
+            document.getElementById('liq-updated').textContent = data.updated_at 
+                ? new Date(data.updated_at).toLocaleTimeString() 
+                : '—';
+
+            if (data.error && data.error.includes('timeout')) {
+                container.innerHTML = `
+                    <div class="text-center text-slate-500 py-8">
+                        <p>Liquidation data requires Binance API authentication.</p>
+                        <p class="text-xs mt-2">The forceOrders endpoint requires special API permissions.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (heatmap.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-slate-500 py-8">No liquidation activity in the last 15 minutes</div>
+                `;
+                return;
+            }
+
+            // Show summary
+            const totalVal = data.total_value || 0;
+            const totalStr = totalVal > 1e9 ? (totalVal/1e9).toFixed(2)+'B' : totalVal > 1e6 ? (totalVal/1e6).toFixed(1)+'M' : formatNumber(totalVal);
+
+            let html = `
+                <div class="flex justify-between items-center mb-4 text-xs text-slate-400">
+                    <span>Total: <span class="text-amber-400 font-semibold">$${totalStr}</span></span>
+                    <span>${data.updated_at ? new Date(data.updated_at).toLocaleTimeString() : '—'}</span>
+                </div>
+            `;
+
+            // Show top 5 liquidated coins
+            html += heatmap.slice(0, 5).map(item => {
+                const symbol = item.symbol || '—';
+                const total = item.total_value || 0;
+                const longs = item.long_liquidations || 0;
+                const shorts = item.short_liquidations || 0;
+                const longRatio = item.long_ratio || 50;
+
+                const valStr = total > 1e6 ? (total/1e6).toFixed(1)+'M' : total > 1e3 ? (total/1e3).toFixed(1)+'K' : formatNumber(total);
+
+                // Intensity badge
+                let intensityBadge = '';
+                if (item.intensity === 'high') intensityBadge = '<span class="text-[9px] bg-rose-500/20 text-rose-400 px-1.5 py-0.5 rounded">HIGH</span>';
+                else if (item.intensity === 'medium') intensityBadge = '<span class="text-[9px] bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded">MED</span>';
+
+                return `
+                    <div class="glass p-3 rounded-xl">
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="flex items-center gap-2">
+                                <span class="text-white font-semibold text-sm">${escapeHtml(symbol)}</span>
+                                ${intensityBadge}
+                            </div>
+                            <span class="text-xs text-slate-400">$${valStr}</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-[10px]">
+                            <span class="text-emerald-400">Long ${longRatio.toFixed(0)}%</span>
+                            <div class="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                <div class="h-full bg-emerald-500" style="width: ${longRatio}%"></div>
+                            </div>
+                            <span class="text-rose-400">${(100 - longRatio).toFixed(0)}% Short</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = html;
+        }
+
+        // Update Whale Data Panel - show top microstructure data from ALL coins
+        function updateWhaleData(signals) {
+            const container = document.getElementById('whale-container');
+
+            // Get coins with microstructure data, sorted by confidence
+            const withMicro = signals
+                .filter(s => s.microstructure)
+                .sort((a, b) => (b.confidence || 0) - (a.confidence || 0))
+                .slice(0, 8);
+
+            if (withMicro.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-slate-500 py-8">No microstructure data available</div>
+                `;
+                return;
+            }
+
+            container.innerHTML = withMicro.map(s => {
+                const micro = s.microstructure;
+                const symbol = s.symbol || '—';
+                const sentiment = micro.sentiment || 'neutral';
+                const confidence = micro.sentiment_confidence || 0;
+                const whalePos = micro.whale_position || 0;
+                const liqPressure = micro.liquidation_pressure || 'neutral';
+                const signals_list = micro.signals || [];
+
+                let sentimentColor = 'text-slate-400';
+                let sentimentIcon = '⚪';
+                if (sentiment === 'bullish') {
+                    sentimentColor = 'text-emerald-400';
+                    sentimentIcon = '🟢';
+                } else if (sentiment === 'bearish') {
+                    sentimentColor = 'text-rose-400';
+                    sentimentIcon = '🔴';
+                }
+
+                let pressureColor = 'text-slate-500';
+                let pressureLabel = 'Neutral';
+                if (liqPressure === 'long') { pressureColor = 'text-emerald-400'; pressureLabel = 'Long Squeeze'; }
+                else if (liqPressure === 'short') { pressureColor = 'text-rose-400'; pressureLabel = 'Short Squeeze'; }
+
+                return `
+                    <div class="glass p-3 rounded-xl">
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="flex items-center gap-2">
+                                <span class="text-white font-semibold text-sm">${escapeHtml(symbol)}</span>
+                                <span class="text-[10px] ${s.signal === 'LONG' ? 'text-emerald-400' : s.signal === 'SHORT' ? 'text-rose-400' : 'text-slate-500'}">${escapeHtml(s.signal)}</span>
+                            </div>
+                            <span class="${sentimentColor} text-xs">${sentimentIcon} ${sentiment}</span>
+                        </div>
+                        <div class="space-y-1 text-[10px] text-slate-400">
+                            <div class="flex justify-between">
+                                <span>Whale Long:</span>
+                                <span class="text-white">${(whalePos * 100).toFixed(1)}%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Confidence:</span>
+                                <span class="text-white">${confidence}%</span>
+                            </div>
+                            ${liqPressure !== 'neutral' ? `
+                            <div class="flex justify-between">
+                                <span>Liq Pressure:</span>
+                                <span class="${pressureColor}">${pressureLabel}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Filter history
+        function filterHistory(filter) {
+            if (!state.historyData) return;
+
+            const container = document.getElementById('history-container');
+            let filtered = state.historyData;
+
+            if (filter === 'win') {
+                filtered = state.historyData.filter(h => h.result === 'WIN');
+            } else if (filter === 'loss') {
+                filtered = state.historyData.filter(h => h.result === 'LOSS');
+            }
+
+            // Re-render with filtered data
+            const closed = filtered.filter(h => h.result === 'WIN' || h.result === 'LOSS').slice(0, 20);
+
+            if (closed.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-slate-500 py-8">No ${filter} trades found</div>
+                `;
+                return;
+            }
+
+            container.innerHTML = closed.map(h => {
+                const isWin = h.result === 'WIN';
+                const colorClass = isWin ? 'win-positive' : 'win-negative';
+                const pnl = h.pnl_pct || 0;
+                const date = h.timestamp ? h.timestamp.split('T')[0] : '—';
+                const symbol = h.symbol || '—';
+
+                return `
+                    <div class="glass p-4 rounded-2xl flex items-center justify-between hover:bg-white/[0.05] transition-colors">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl ${isWin ? 'bg-emerald-500/20' : 'bg-rose-500/20'} flex items-center justify-center">
+                                <span class="text-lg">${isWin ? '✅' : '❌'}</span>
+                            </div>
+                            <div>
+                                <div class="text-white font-semibold text-sm">
+                                    <span class="text-amber-400">${escapeHtml(symbol)}</span>
+                                    <span class="mx-1">•</span>
+                                    <span class="${h.signal === 'LONG' ? 'text-emerald-400' : 'text-rose-400'}">${escapeHtml(h.signal)}</span>
+                                </div>
+                                <div class="text-xs text-slate-500">${escapeHtml(date)} • ${escapeHtml(h.regime || 'SIDEWAYS')}</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="${colorClass} font-bold">${isWin ? '+' : ''}${escapeHtml(pnl.toFixed(1))}%</div>
+                            <div class="text-xs text-slate-500">${escapeHtml(h.confidence || 0)}% conf</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    </script>
+</body>
+</html>
