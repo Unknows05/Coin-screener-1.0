@@ -19,7 +19,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.engine import ScreeningEngine
+from src.engine_v2 import ScreeningEngineV2 as ScreeningEngine
 from src.liquidation import liquidation_heatmap, update_liquidation_data
 
 # ---- Globals ----

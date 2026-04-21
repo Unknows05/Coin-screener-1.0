@@ -534,6 +534,7 @@ function setSector(s){SECTOR=s;document.querySelectorAll('.fbtn').forEach(b=>b.c
 
 // History & Calendar (Redesigned)
 async function loadHistory(){
+    console.log('[History] Loading data for', CAL_Y, CAL_M);
     
     // Update calendar title with month name
     var monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -547,12 +548,16 @@ async function loadHistory(){
             api('/api/db/stats').catch(()=>null)
         ]);
         
+        console.log('[History] Calendar data:', res);
+        console.log('[History] DB stats:', dbStats);
+        
         var days=res.calendar||[];
         var map={};
         days.forEach(d=>map[d.scan_date]=d);
         
         // Update Stats Cards
         if(dbStats&&dbStats.stats){
+            console.log('[History] Updating stats cards:', dbStats.stats);
             if($('stat-wins')) $('stat-wins').textContent=dbStats.stats.wins||0;
             if($('stat-losses')) $('stat-losses').textContent=dbStats.stats.losses||0;
             if($('stat-winrate')) $('stat-winrate').textContent=(dbStats.stats.win_rate||0)+'%';
@@ -575,6 +580,7 @@ async function loadHistory(){
             if($('stat-best')) $('stat-best').textContent=bestDay.wins?bestDay.wins+' wins':'—';
             if($('stat-worst')) $('stat-worst').textContent=worstDay.losses?worstDay.losses+' losses':'—';
         }catch(e){
+            console.log('[History] Error loading signal history for stats:', e);
             if($('stat-open')) $('stat-open').textContent='—';
         }
         
@@ -584,7 +590,7 @@ async function loadHistory(){
         for(var i=0;i<fd;i++)h+='<div class="cal-day-modern empty"></div>';
         
         for(var i=1;i<=dim;i++){
-            var k=CAL_Y+'-'+String(CAL_M).padStart(2,'0')+'-'+String(i).padStart(2,'0');
+            var k=CAL_Y+'-'+(CAL_M<10?'0':'')+CAL_M+'-'+(i<10?'0':'')+i;
             var day=map[k];
             var cls='cal-day-modern';
             var dayNum=i;
@@ -657,6 +663,7 @@ function changeMonth(d){CAL_M+=d;if(CAL_M>12){CAL_M=1;CAL_Y++}if(CAL_M<1){CAL_M=
 
 // RL (Reinforcement Learning) Data Loading
 async function loadRLData(){
+    console.log('[RL] Loading adaptive learning data...');
     var panel=$('rl-panel');
     var content=$('rl-content');
     var status=$('rl-status');
@@ -666,6 +673,7 @@ async function loadRLData(){
     
     try{
         var res=await api('/api/rl/performance?days=7');
+        console.log('[RL] Data received:', res);
         
         if(!res.ok||!res.performance){
             if(status) status.textContent='No Data';
@@ -790,6 +798,7 @@ async function loadRLData(){
         html+='</ul></div>';
         
         if(content) content.innerHTML=html;
+        console.log('[RL] Rendered successfully');
         
     }catch(e){
         console.error('[RL] Error:', e);
@@ -799,26 +808,32 @@ async function loadRLData(){
 }
 function selectDate(dateStr,hasDataStr){
     var hasData=hasDataStr==='true'; // Convert string to boolean
+    console.log('[selectDate] Clicked:', dateStr, 'hasData:', hasData, 'current selected:', SELECTED_DATE);
     
     if(!hasData){
+        console.log('[selectDate] No data for this date, ignoring');
         return; // No data for this date
     }
     
     if(SELECTED_DATE===dateStr){
         SELECTED_DATE=null; // Deselect
+        console.log('[selectDate] Deselected date');
     }else{
         SELECTED_DATE=dateStr; // Select
+        console.log('[selectDate] Selected date:', dateStr);
     }
     
     loadHistory(); // Re-render calendar and signal history
 }
 function clearDateFilter(){
+    console.log('[clearDateFilter] Clearing date filter');
     SELECTED_DATE=null;
     loadHistory();
 }
 
 // Helper function to force refresh history table without reloading calendar
 function refreshHistoryTableOnly(){
+    console.log('[refreshHistoryTableOnly] Refreshing only history table');
     if(window._signalHistory){
         renderHistoryGrid(window._signalHistory);
     }else{
@@ -856,10 +871,14 @@ function renderHistoryGrid(signals){
     
     // Filter by selected date if set
     if(SELECTED_DATE){
+        console.log('[renderHistoryGrid] Filtering by date:', SELECTED_DATE);
         filtered=filtered.filter(s=>{
             var sigDate=s.timestamp?s.timestamp.split('T')[0]:null;
-            return sigDate===SELECTED_DATE;
+            var match=sigDate===SELECTED_DATE;
+            console.log('[renderHistoryGrid] Checking signal date:', sigDate, 'vs', SELECTED_DATE, 'match:', match);
+            return match;
         });
+        console.log('[renderHistoryGrid] After date filter:', filtered.length, 'signals');
     }
     
     // Update count badge
@@ -964,6 +983,7 @@ function renderHistoryGrid(signals){
     
     h+='</tbody></table>';
     if(grid) grid.innerHTML=h;
+    console.log('[renderHistoryGrid] Rendered', filtered.length, 'rows');
 }
 
 function filterHistory(type,btn){
@@ -978,35 +998,58 @@ function filterHistory(type,btn){
 
 // Charts (Chart.js) - Enhanced Design
 function renderCharts(data){
-    if(window.pnlChart){window.pnlChart.destroy();window.pnlChart=null}
-    if(window.wrChart){window.wrChart.destroy();window.wrChart=null}
+    if(window.pnlChart)window.pnlChart.destroy();
+    if(window.wrChart)window.wrChart.destroy();
 
-    // Limit data points to max 30 for performance
-    if(data.labels&&data.labels.length>30){
-        const step=Math.ceil(data.labels.length/30);
-        data.labels=data.labels.filter((_,i)=>i%step===0);
-        data.pnl=data.pnl.filter((_,i)=>i%step===0);
-        data.win_rate=data.win_rate.filter((_,i)=>i%step===0);
-    }
-    
-    if(!data.labels||data.labels.length===0){
+    // If no data, show empty state
+    if(!data.labels || data.labels.length===0){
         data={labels:['No Data'],pnl:[0],win_rate:[0]};
     }
 
-    // Cumulative Performance Chart (PNL) - Optimized
+    // Cumulative Performance Chart (PNL)
     window.pnlChart=new Chart($('chart-pnl'),{
         type:'line',
-        data:{labels:data.labels,datasets:[{
-            label:'Score',data:data.pnl,borderColor:'#f0b90b',backgroundColor:'rgba(240,185,11,0.1)',
-            fill:true,tension:0.4,pointRadius:2,borderWidth:1.5  // Reduced from 3,2
-        }]},
+        data:{
+            labels:data.labels,
+            datasets:[{
+                label:'Score',
+                data:data.pnl,
+                borderColor:'#f0b90b',
+                backgroundColor:'rgba(240,185,11,0.1)',
+                fill:true,
+                tension:0.4,
+                pointRadius:3,
+                pointBackgroundColor:'#f0b90b',
+                pointBorderColor:'#1c2128',
+                pointBorderWidth:2,
+                borderWidth:2
+            }]
+        },
         options:{
-            responsive:true,maintainAspectRatio:false,
-            animation:{duration:0},  // Disable animation for performance
-            plugins:{legend:{display:false}},
+            responsive:true,
+            maintainAspectRatio:false,
+            plugins:{
+                legend:{display:false},
+                tooltip:{
+                    backgroundColor:'#1c2128',
+                    borderColor:'#2b3139',
+                    borderWidth:1,
+                    titleColor:'#eaecef',
+                    bodyColor:'#eaecef',
+                    padding:10,
+                    displayColors:false
+                }
+            },
             scales:{
-                x:{grid:{color:'rgba(43,49,57,0.3)',drawBorder:false},ticks:{color:'#848e9c',font:{size:9},maxTicksLimit:8}},  // Limit ticks
-                y:{grid:{color:'rgba(43,49,57,0.3)',drawBorder:false},ticks:{color:'#848e9c',font:{size:9}},beginAtZero:true}
+                x:{
+                    grid:{color:'rgba(43,49,57,0.5)',drawBorder:false},
+                    ticks:{color:'#848e9c',font:{size:10}}
+                },
+                y:{
+                    grid:{color:'rgba(43,49,57,0.5)',drawBorder:false},
+                    ticks:{color:'#848e9c',font:{size:10}},
+                    beginAtZero:true
+                }
             }
         }
     });
@@ -1033,7 +1076,6 @@ function renderCharts(data){
         options:{
             responsive:true,
             maintainAspectRatio:false,
-            animation:{duration:0},
             plugins:{
                 legend:{display:false},
                 tooltip:{
@@ -1238,13 +1280,8 @@ async function forceRefresh(){
     }
 }
 
-// Visibility handling - pause when tab not active
-var _isVisible=true,_lastLoad=0;
-document.addEventListener('visibilitychange',()=>{_isVisible=!document.hidden;if(_isVisible&&Date.now()-_lastLoad>30000)load()});
-
-// Init - load immediately, then every 30s (not 15s) and only if visible
-load();
-setInterval(()=>{if(_isVisible&&Date.now()-_lastLoad>30000)load()},30000);
+// Init
+load();setInterval(load,15000);
 </script>
 </body>
 </html>
