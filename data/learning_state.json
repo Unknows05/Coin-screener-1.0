@@ -1,0 +1,85 @@
+{
+  "last_updated": "2026-04-23T05:17:45.424992",
+  "beliefs": {
+    "BEAR+LONG": {
+      "regime": "BEAR",
+      "signal": "LONG",
+      "alpha": 3.0,
+      "beta": 3.0,
+      "wr_estimate": 50.0,
+      "confidence": 4.0,
+      "total_trades": 2,
+      "last_updated": "2026-04-23T05:17:45.424960"
+    },
+    "BEAR+SHORT": {
+      "regime": "BEAR",
+      "signal": "SHORT",
+      "alpha": 233.0,
+      "beta": 287.0,
+      "wr_estimate": 44.8,
+      "confidence": 100.0,
+      "total_trades": 516,
+      "last_updated": "2026-04-23T05:17:45.424977"
+    },
+    "BULL+LONG": {
+      "regime": "BULL",
+      "signal": "LONG",
+      "alpha": 576.0,
+      "beta": 405.0,
+      "wr_estimate": 58.8,
+      "confidence": 100.0,
+      "total_trades": 977,
+      "last_updated": "2026-04-23T05:17:45.424980"
+    },
+    "BULL+SHORT": {
+      "regime": "BULL",
+      "signal": "SHORT",
+      "alpha": 246.0,
+      "beta": 126.0,
+      "wr_estimate": 66.3,
+      "confidence": 100.0,
+      "total_trades": 368,
+      "last_updated": "2026-04-23T05:17:45.424982"
+    },
+    "HIGH_VOL+LONG": {
+      "regime": "HIGH_VOL",
+      "signal": "LONG",
+      "alpha": 48.0,
+      "beta": 21.0,
+      "wr_estimate": 70.8,
+      "confidence": 100.0,
+      "total_trades": 65,
+      "last_updated": "2026-04-23T05:17:45.424984"
+    },
+    "HIGH_VOL+SHORT": {
+      "regime": "HIGH_VOL",
+      "signal": "SHORT",
+      "alpha": 23.0,
+      "beta": 38.0,
+      "wr_estimate": 36.8,
+      "confidence": 100.0,
+      "total_trades": 57,
+      "last_updated": "2026-04-23T05:17:45.424986"
+    },
+    "SIDEWAYS+LONG": {
+      "regime": "SIDEWAYS",
+      "signal": "LONG",
+      "alpha": 246.0,
+      "beta": 451.0,
+      "wr_estimate": 35.2,
+      "confidence": 100.0,
+      "total_trades": 693,
+      "last_updated": "2026-04-23T05:17:45.424988"
+    },
+    "SIDEWAYS+SHORT": {
+      "regime": "SIDEWAYS",
+      "signal": "SHORT",
+      "alpha": 1911.0,
+      "beta": 1143.0,
+      "wr_estimate": 62.6,
+      "confidence": 100.0,
+      "total_trades": 3050,
+      "last_updated": "2026-04-23T05:17:45.424990"
+    }
+  }
+}

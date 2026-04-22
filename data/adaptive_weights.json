@@ -1,31 +1,31 @@
 {
   "BULL": {
-    "mean_reversion": 0.133,
-    "momentum": 0.443,
-    "volume": 0.206,
-    "volatility": 0.127,
-    "pattern": 0.091
+    "mean_reversion": 0.079,
+    "momentum": 0.541,
+    "volume": 0.203,
+    "volatility": 0.104,
+    "pattern": 0.072
   },
   "BEAR": {
-    "mean_reversion": 0.34,
-    "momentum": 0.206,
-    "volume": 0.174,
-    "volatility": 0.18,
-    "pattern": 0.1
+    "mean_reversion": 0.413,
+    "momentum": 0.147,
+    "volume": 0.151,
+    "volatility": 0.203,
+    "pattern": 0.086
   },
   "SIDEWAYS": {
-    "mean_reversion": 0.418,
-    "momentum": 0.136,
-    "volume": 0.175,
-    "volatility": 0.131,
-    "pattern": 0.14
+    "mean_reversion": 0.534,
+    "momentum": 0.065,
+    "volume": 0.132,
+    "volatility": 0.108,
+    "pattern": 0.161
   },
   "HIGH_VOL": {
-    "mean_reversion": 0.215,
-    "momentum": 0.185,
-    "volume": 0.272,
-    "volatility": 0.242,
-    "pattern": 0.085
+    "mean_reversion": 0.173,
+    "momentum": 0.121,
+    "volume": 0.319,
+    "volatility": 0.325,
+    "pattern": 0.062
   },
   "DEFAULT": {
     "mean_reversion": 0.25,

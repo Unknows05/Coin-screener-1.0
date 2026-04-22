@@ -1,0 +1,234 @@
+{
+  "timestamp": "2026-04-23T05:03:25.093880",
+  "regime_signal_wr": {
+    "BEAR_LONG": {
+      "wr": 50.0,
+      "total": 2,
+      "wins": 1,
+      "stale": true
+    },
+    "BEAR_SHORT": {
+      "wr": 44.8,
+      "total": 516,
+      "wins": 231,
+      "stale": false
+    },
+    "BULL_LONG": {
+      "wr": 22.6,
+      "total": 296,
+      "wins": 67,
+      "stale": false
+    },
+    "BULL_SHORT": {
+      "wr": 66.7,
+      "total": 366,
+      "wins": 244,
+      "stale": false
+    },
+    "HIGH_VOL_LONG": {
+      "wr": 54.3,
+      "total": 35,
+      "wins": 19,
+      "stale": false
+    },
+    "HIGH_VOL_SHORT": {
+      "wr": 42.0,
+      "total": 50,
+      "wins": 21,
+      "stale": false
+    },
+    "SIDEWAYS_LONG": {
+      "wr": 31.6,
+      "total": 402,
+      "wins": 127,
+      "stale": false
+    },
+    "SIDEWAYS_SHORT": {
+      "wr": 63.0,
+      "total": 3029,
+      "wins": 1909,
+      "stale": false
+    }
+  },
+  "session_wr": {
+    "LONDON": {
+      "wr": 30.8,
+      "total": 965,
+      "wins": 297
+    },
+    "NEW_YORK": {
+      "wr": 71.4,
+      "total": 671,
+      "wins": 479
+    },
+    "OFF_HOURS": {
+      "wr": 79.3,
+      "total": 615,
+      "wins": 488
+    },
+    "ASIA": {
+      "wr": 57.7,
+      "total": 3477,
+      "wins": 2006
+    }
+  },
+  "coin_wr": {
+    "1000FLOKIUSDT": {
+      "wr": 46.9,
+      "total": 192,
+      "wins": 90
+    },
+    "1000PEPEUSDT": {
+      "wr": 59.5,
+      "total": 205,
+      "wins": 122
+    },
+    "AAVEUSDT": {
+      "wr": 54.2,
+      "total": 179,
+      "wins": 97
+    },
+    "ADAUSDT": {
+      "wr": 60.5,
+      "total": 200,
+      "wins": 121
+    },
+    "APTUSDT": {
+      "wr": 46.3,
+      "total": 188,
+      "wins": 87
+    },
+    "ARBUSDT": {
+      "wr": 45.1,
+      "total": 195,
+      "wins": 88
+    },
+    "ATOMUSDT": {
+      "wr": 36.2,
+      "total": 163,
+      "wins": 59
+    },
+    "AVAXUSDT": {
+      "wr": 61.7,
+      "total": 193,
+      "wins": 119
+    },
+    "BNBUSDT": {
+      "wr": 60.1,
+      "total": 198,
+      "wins": 119
+    },
+    "BTCUSDT": {
+      "wr": 44.9,
+      "total": 167,
+      "wins": 75
+    },
+    "DOGEUSDT": {
+      "wr": 59.1,
+      "total": 198,
+      "wins": 117
+    },
+    "DOTUSDT": {
+      "wr": 51.3,
+      "total": 187,
+      "wins": 96
+    },
+    "ETHUSDT": {
+      "wr": 51.6,
+      "total": 182,
+      "wins": 94
+    },
+    "FETUSDT": {
+      "wr": 58.4,
+      "total": 209,
+      "wins": 122
+    },
+    "FILUSDT": {
+      "wr": 60.5,
+      "total": 177,
+      "wins": 107
+    },
+    "INJUSDT": {
+      "wr": 53.9,
+      "total": 204,
+      "wins": 110
+    },
+    "LINKUSDT": {
+      "wr": 69.6,
+      "total": 194,
+      "wins": 135
+    },
+    "NEARUSDT": {
+      "wr": 48.5,
+      "total": 202,
+      "wins": 98
+    },
+    "ONDOUSDT": {
+      "wr": 64.4,
+      "total": 188,
+      "wins": 121
+    },
+    "OPUSDT": {
+      "wr": 57.0,
+      "total": 186,
+      "wins": 106
+    },
+    "ORDIUSDT": {
+      "wr": 50.5,
+      "total": 214,
+      "wins": 108
+    },
+    "RENDERUSDT": {
+      "wr": 41.5,
+      "total": 195,
+      "wins": 81
+    },
+    "SEIUSDT": {
+      "wr": 73.3,
+      "total": 180,
+      "wins": 132
+    },
+    "SOLUSDT": {
+      "wr": 67.0,
+      "total": 188,
+      "wins": 126
+    },
+    "STXUSDT": {
+      "wr": 72.5,
+      "total": 189,
+      "wins": 137
+    },
+    "SUIUSDT": {
+      "wr": 59.1,
+      "total": 203,
+      "wins": 120
+    },
+    "TIAUSDT": {
+      "wr": 60.3,
+      "total": 199,
+      "wins": 120
+    },
+    "UNIUSDT": {
+      "wr": 66.1,
+      "total": 168,
+      "wins": 111
+    },
+    "WIFUSDT": {
+      "wr": 60.2,
+      "total": 206,
+      "wins": 124
+    },
+    "XRPUSDT": {
+      "wr": 71.5,
+      "total": 179,
+      "wins": 128
+    }
+  },
+  "adaptive_thresholds": {
+    "BULL": 51,
+    "BEAR": 55,
+    "SIDEWAYS": 56,
+    "HIGH_VOL": 55,
+    "DEFAULT": 55
+  }
+}
