@@ -31,6 +31,7 @@ from src.alerter import SignalAlerter
 from src.regime import RegimeDetector
 from src.utils import is_leveraged_token
 from src.adaptive_rl import get_optimizer, AdaptiveSignalOptimizer
+from src.session_filter import get_session_filter
 
 # V1 imports (fallback)
 from src.enhanced_data import get_enhanced_data, EnhancedFuturesData
@@ -113,6 +114,7 @@ class ScreeningEngineV2:
         self.db = ScreenerDB(str(self.cache_dir / "screener.db"))
         self.alerter = SignalAlerter()
         self.rl_optimizer: AdaptiveSignalOptimizer = get_optimizer(str(self.cache_dir / "screener.db"))
+        self.session_filter = get_session_filter(str(self.cache_dir / "screener.db"))
         
         # V1 components (fallback)
         self.enhanced_data_v1: EnhancedFuturesData = get_enhanced_data(str(self.cache_dir / "enhanced_cache"))
@@ -351,16 +353,43 @@ class ScreeningEngineV2:
                         micro_data if self.use_microstructure else None
                     )
 
-                    # Generate signal
+# Generate signal
                     coin_data = {
                         "symbol": symbol,
                         "price": price,
                         "klines": klines_by_tf.get("15m", []),
                         "regime": regime_data,
-                        "flip_detection": flip_detection,
                         **score_result
                     }
                     signal_result = generate_signal(coin_data, self.config)
+                    
+                    # Apply session context (adjusts score, SL/TP)
+                    try:
+                        session_context = self.session_filter.get_session_context()
+                        signal_result = self.session_filter.apply_session_to_signal(
+                            signal_result, session_context
+                        )
+                    except Exception as e:
+                        logger.debug(f"[EngineV2] Session filter failed for {symbol}: {e}")
+                    
+                    # Apply reversal bias from RL feedback
+                    try:
+                        reversal = self.rl_optimizer.detect_regime_reversal()
+                        if reversal.get("reversal_detected"):
+                            bias_shift = reversal.get("bias_shift", 0)
+                            regime_type = regime_data.get("regime", "SIDEWAYS") if isinstance(regime_data, dict) else str(regime_data)
+                            if signal_result["signal"] == "LONG" and bias_shift > 0:
+                                signal_result["score"] = min(100, signal_result.get("score", 50) + bias_shift)
+                                signal_result.setdefault("reasons", []).append(
+                                    f"Reversal Bias: LONG strengthening (+{bias_shift:.0f})"
+                                )
+                            elif signal_result["signal"] == "SHORT" and bias_shift < 0:
+                                signal_result["score"] = min(100, signal_result.get("score", 50) + abs(bias_shift))
+                                signal_result.setdefault("reasons", []).append(
+                                    f"Reversal Bias: SHORT strengthening (+{abs(bias_shift):.0f})"
+                                )
+                    except Exception as e:
+                        logger.debug(f"[EngineV2] Reversal detection failed for {symbol}: {e}")
                     
                     # Add microstructure metadata
                     if self.use_microstructure and micro_data:
@@ -419,6 +448,8 @@ class ScreeningEngineV2:
                         # Add risk info to signal
                         signal_result["risk_check"] = risk_check
                         signal_result["risk_score"] = risk_check.get("risk_score", 0)
+                        if risk_check.get("position_reduction", 1.0) < 1.0:
+                            signal_result["position_reduction"] = risk_check.get("position_reduction", 1.0)
                         
                         # Log warnings
                         if risk_check.get("warnings"):
@@ -501,6 +532,35 @@ class ScreeningEngineV2:
                         logger.info(f"[EngineV2] RL: Updated weights for {len(rl_updates)} regimes")
                 except Exception as rl_err:
                     logger.debug(f"[EngineV2] RL update skipped: {rl_err}")
+                    
+                # 5. Outcome Feedback: Save dynamic WR report for next scan
+                try:
+                    self._feedback = getattr(self, '_feedback', None)
+                    if self._feedback is None:
+                        from src.outcome_feedback import get_feedback
+                        self._feedback = get_feedback(str(self.cache_dir / "screener.db"))
+                    self._feedback.save_feedback_report()
+                except Exception as fb_err:
+                    logger.debug(f"[EngineV2] Feedback report skipped: {fb_err}")
+                    
+            # 6. Bayesian Learning: Update beliefs from trade outcomes
+                try:
+                    from src.learning_engine import get_learning_engine
+                    learner = get_learning_engine(str(self.cache_dir / "screener.db"))
+                    outcomes = self.db.get_signals_with_outcomes(limit=200)
+                    updated_count = 0
+                    for s in outcomes:
+                        if s.get("result") in ("WIN", "LOSS"):
+                            learner.update_from_trades(
+                                regime=s.get("regime", "UNKNOWN"),
+                                signal=s.get("signal", "WAIT"),
+                                won=(s.get("result") == "WIN")
+                            )
+                            updated_count += 1
+                    if updated_count > 0:
+                        logger.debug(f"[EngineV2] Bayesian: Updated {updated_count} beliefs")
+                except Exception as learn_err:
+                    logger.debug(f"[EngineV2] Learning update skipped: {learn_err}")
                     
             except Exception as e:
                 logger.warning(f"[EngineV2] DB/Alert/RL error: {e}")
@@ -655,7 +715,10 @@ class ScreeningEngineV2:
                     "reasons": item.get("reasons", []),
                     "patterns_detected": item.get("patterns_detected", []),
                     "risk_blocked": item.get("risk_blocked", False),
-                    "risk_score": item.get("risk_score", 0)
+                    "risk_score": item.get("risk_score", 0),
+                    "session": item.get("session", ""),
+                    "position_reduction": item.get("position_reduction", 1.0),
+                    "atr": item.get("atr", 0),
                 }
                 compact_data.append(compact_item)
 
@@ -698,6 +761,17 @@ class ScreeningEngineV2:
         """Set the next scheduled scan time."""
         with self._lock:
             self._next_scan_time = timestamp
+
+    def is_scanning(self) -> bool:
+        """Check if a scan is currently running."""
+        with self._lock:
+            return self._is_scanning
+
+    def clear_cache(self):
+        """Clear the last scan result cache."""
+        with self._lock:
+            self._last_result = []
+        logger.info("[EngineV2] Cache cleared.")
 
     def close(self):
         """Cleanup resources."""

@@ -30,12 +30,15 @@ class AdaptiveSignalOptimizer:
     
     # Default configuration
     DEFAULT_CONFIG = {
-        "learning_rate": 0.05,  # How fast to adapt (0.01 = conservative, 0.1 = aggressive)
-        "min_samples": 20,  # Minimum trades before adapting
-        "ema_span": 50,  # EMA smoothing for performance metrics
-        "adjustment_threshold": 0.55,  # WR threshold before adjusting
-        "max_weight_change": 0.1,  # Max ±10% change per update
-        "regime_specific": True,  # Different params per regime
+        "learning_rate": 0.05,
+        "min_samples": 20,
+        "ema_span": 50,
+        "adjustment_threshold": 0.55,
+        "max_weight_change": 0.1,
+        "regime_specific": True,
+        "decay_factor": 0.95,
+        "session_feedback": True,
+        "reversal_detection": True,
     }
     
     # Base factor weights (starting point)
@@ -51,19 +54,23 @@ class AdaptiveSignalOptimizer:
     REGIME_PROFILES = {
         "BULL": {
             "factor_bias": {"momentum": 1.3, "mean_reversion": 0.7, "volume": 1.1},
-            "score_threshold": 50,  # Lower threshold in bull market
+            "score_threshold": 50,
+            "preferred_signal": "LONG",
         },
         "BEAR": {
             "factor_bias": {"mean_reversion": 1.3, "momentum": 0.8, "volatility": 1.2},
-            "score_threshold": 55,  # Higher threshold for shorts
+            "score_threshold": 55,
+            "preferred_signal": "SHORT",
         },
         "SIDEWAYS": {
             "factor_bias": {"mean_reversion": 1.4, "momentum": 0.6, "pattern": 1.3},
-            "score_threshold": 60,  # Strict in sideways
+            "score_threshold": 55,
+            "preferred_signal": "SHORT",
         },
         "HIGH_VOL": {
             "factor_bias": {"volatility": 1.4, "volume": 1.3, "momentum": 0.8},
-            "score_threshold": 58,
+            "score_threshold": 55,
+            "preferred_signal": None,
         },
     }
     
@@ -150,28 +157,36 @@ class AdaptiveSignalOptimizer:
         conn.row_factory = sqlite3.Row
         c = conn.cursor()
         
-        since = (datetime.now() - timedelta(days=days)).isoformat()
+        try:
+            since = (datetime.now() - timedelta(days=days)).isoformat()
+            
+            c.execute("""
+                SELECT 
+                    regime,
+                    result,
+                    signal,
+                    entry_price,
+                    exit_price,
+                    (SELECT AVG(CASE WHEN result='WIN' THEN 1 ELSE 0 END) * 100
+                     FROM signals s2 
+                     WHERE s2.regime = s1.regime 
+                     AND s2.timestamp > ? 
+                     AND s2.result IN ('WIN', 'LOSS')) as regime_wr
+                FROM signals s1
+                WHERE timestamp > ? 
+                AND result IN ('WIN', 'LOSS')
+                ORDER BY timestamp DESC
+            """, (since, since))
+            
+            rows = c.fetchall()
+        except Exception as e:
+            logger.error(f"[RL] Performance analysis error: {e}")
+            try:
+                conn.close()
+            except Exception:
+                pass
+            return {"error": str(e)}
         
-        # Get completed trades (WIN or LOSS)
-        c.execute("""
-            SELECT 
-                regime,
-                result,
-                signal,
-                entry_price,
-                exit_price,
-                (SELECT AVG(CASE WHEN result='WIN' THEN 1 ELSE 0 END) * 100
-                 FROM signals s2 
-                 WHERE s2.regime = s1.regime 
-                 AND s2.timestamp > ? 
-                 AND s2.result IN ('WIN', 'LOSS')) as regime_wr
-            FROM signals s1
-            WHERE timestamp > ? 
-            AND result IN ('WIN', 'LOSS')
-            ORDER BY timestamp DESC
-        """, (since, since))
-        
-        rows = c.fetchall()
         conn.close()
         
         if not rows:
@@ -308,16 +323,17 @@ class AdaptiveSignalOptimizer:
     
     def get_recommended_params(self, regime: str = "DEFAULT") -> Dict:
         """
-        Get current recommended parameters for a specific regime.
-        
-        Returns adaptive weights and Kelly position sizing.
+        Get recommended parameters for a regime.
+
+        Includes session-aware feedback and reversal detection.
         """
         weights = self.current_weights.get(regime, self.current_weights.get("DEFAULT", self.BASE_FACTOR_WEIGHTS))
-        
-        # Get recent performance for this regime
+
         perf = self.analyze_recent_performance(days=7)
         regime_perf = perf.get(regime, {})
-        
+
+        preferred_signal = self.REGIME_PROFILES.get(regime, {}).get("preferred_signal")
+
         return {
             "factor_weights": weights,
             "score_threshold": self.REGIME_PROFILES.get(regime, {}).get("score_threshold", 55),
@@ -325,7 +341,66 @@ class AdaptiveSignalOptimizer:
             "expectancy": regime_perf.get("expectancy", 0),
             "recent_wr": regime_perf.get("win_rate", 50),
             "suggested_position_size": f"{regime_perf.get('kelly_fraction', 0.02) * 100:.1f}%",
+            "preferred_signal": preferred_signal,
+            "long_wr": regime_perf.get("long_wr", 50),
+            "short_wr": regime_perf.get("short_wr", 50),
         }
+
+    def detect_regime_reversal(self, recent_days: int = 3) -> Dict:
+        """
+        Detect if regime performance is reversing.
+
+        Key insight: if SHORT WR was high but now dropping, and LONG WR rising,
+        the market may be flipping. System should NOT be blind — it should
+        adjust signal direction dynamically.
+
+        Returns dict with reversal signals and direction bias.
+        """
+        try:
+            recent = self.analyze_recent_performance(days=recent_days, _timeout=5.0)
+            longer = self.analyze_recent_performance(days=14, _timeout=5.0)
+        except Exception:
+            return {"reversal_detected": False, "bias_shift": 0}
+
+        reversal_info = {"reversal_detected": False, "bias_shift": 0, "details": {}}
+
+        for regime in ["BULL", "BEAR", "SIDEWAYS", "HIGH_VOL"]:
+            r_data = recent.get(regime, {})
+            l_data = longer.get(regime, {})
+
+            if r_data.get("status") == "INSUFFICIENT_DATA":
+                continue
+            if l_data.get("status") == "INSUFFICIENT_DATA":
+                continue
+
+            r_long_wr = r_data.get("long_wr", 50)
+            r_short_wr = r_data.get("short_wr", 50)
+            l_long_wr = l_data.get("long_wr", 50)
+            l_short_wr = l_data.get("short_wr", 50)
+
+            long_delta = r_long_wr - l_long_wr
+            short_delta = r_short_wr - l_short_wr
+
+            if abs(long_delta) > 15 or abs(short_delta) > 15:
+                reversal_info["reversal_detected"] = True
+                if long_delta > 0 and short_delta < 0:
+                    shift = min(10, abs(long_delta) * 0.3)
+                    reversal_info["bias_shift"] = shift
+                    reversal_info["details"][regime] = {
+                        "direction": "LONG_BIAS_INCREASING",
+                        "long_delta": round(long_delta, 1),
+                        "short_delta": round(short_delta, 1),
+                    }
+                elif short_delta > 0 and long_delta < 0:
+                    shift = max(-10, -abs(short_delta) * 0.3)
+                    reversal_info["bias_shift"] = shift
+                    reversal_info["details"][regime] = {
+                        "direction": "SHORT_BIAS_INCREASING",
+                        "long_delta": round(long_delta, 1),
+                        "short_delta": round(short_delta, 1),
+                    }
+
+        return reversal_info
     
     def generate_report(self) -> str:
         """Generate a human-readable RL performance report."""

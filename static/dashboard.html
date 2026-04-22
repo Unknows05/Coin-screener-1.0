@@ -462,7 +462,7 @@
 var DATA=[],TICKER={},SECTOR='all',SORT='cd',CAL_Y=new Date().getFullYear(),CAL_M=new Date().getMonth()+1,SELECTED_DATE=null;
 const MAP={'BTCUSDT':'majors','ETHUSDT':'majors','BNBUSDT':'majors','SOLUSDT':'majors','XRPUSDT':'majors','ADAUSDT':'l1','AVAXUSDT':'l1','DOTUSDT':'l1','ATOMUSDT':'l1','NEARUSDT':'l1','FILUSDT':'l1','STXUSDT':'l1','ARBUSDT':'l1','OPUSDT':'l1','LINKUSDT':'defi','UNIUSDT':'defi','AAVEUSDT':'defi','FETUSDT':'ai','RENDERUSDT':'ai','INJUSDT':'ai','DOGEUSDT':'memes','1000PEPEUSDT':'memes','WIFUSDT':'memes','1000FLOKIUSDT':'memes','SUIUSDT':'new','SEIUSDT':'new','APTUSDT':'new','TIAUSDT':'new','ONDOUSDT':'new','ORDIUSDT':'new'};
 function $(id){return document.getElementById(id)}
-function fp(v){if(v==null)return'—';if(v>=1e4)return'$'+v.toLocaleString('en-US',{maximumFractionDigits:0});if(v>=1e3)return'$'+v.toLocaleString('en-US',{maximumFractionDigits:0});if(v>=1)return'$'+v.toFixed(2);if(v>=.01)return'$'+v.toFixed(4);return'$'+v.toFixed(6)}
+function fp(v){if(v==null||isNaN(v))return'—';v=Number(v);if(v>=1e4)return'$'+v.toLocaleString('en-US',{maximumFractionDigits:0});if(v>=1e3)return'$'+v.toLocaleString('en-US',{maximumFractionDigits:0});if(v>=1)return'$'+v.toFixed(2);if(v>=.01)return'$'+v.toFixed(4);return'$'+v.toFixed(6)}
 function ft(iso){if(!iso)return'—';return new Date(iso).toLocaleTimeString('en-GB',{hour12:false})}
 function api(p){return fetch(p).then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.json()})}
 function cp(v){navigator.clipboard.writeText(String(v)).then(()=>toast('Copied: '+v)).catch(()=>{})}
@@ -661,15 +661,17 @@ async function loadRLData(){
     var content=$('rl-content');
     var status=$('rl-status');
     
-    if(panel) panel.style.display='block';
-    if(status) status.textContent='Loading...';
+    if(panel&&!totalTrades){panel.style.display='none';return;}
+        if(panel&&totalTrades) panel.style.display='block';
+        if(status) status.textContent=totalTrades>0?'Active':'No Data';
     
     try{
         var res=await api('/api/rl/performance?days=7');
         
         if(!res.ok||!res.performance){
+            if(panel) panel.style.display='none';
             if(status) status.textContent='No Data';
-            if(content) content.innerHTML='<div style="padding:20px;color:var(--tx2)">No RL data available yet. Need more trade history.</div>';
+            if(content) content.innerHTML='';
             return;
         }
         

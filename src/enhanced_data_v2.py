@@ -82,6 +82,12 @@ class EnhancedDataV2:
         self._cache: Dict[str, Tuple[any, float]] = {}
         self._cache_lock = threading.Lock()
         
+        # Permanent failure cache — endpoints that returned auth errors
+        # Avoids repeated 401 retries that block the entire scan for minutes
+        self._fail_cache: Dict[str, float] = {}
+        self._fail_cache_lock = threading.Lock()
+        self._fail_cache_ttl = 300  # Retry failed auth endpoints after 5 min
+        
         # Sliding window for whale detection
         self._whale_history: Dict[str, deque] = {}  # symbol -> deque of WhaleTrade
         self._liq_history: Dict[str, deque] = {}  # symbol -> deque of LiquidationEvent
@@ -111,13 +117,17 @@ class EnhancedDataV2:
         """
         Fetch REAL liquidation data from forceOrders endpoint.
         
-        Args:
-            symbol: Trading pair (e.g., 'BTCUSDT')
-            limit: Number of recent liquidations to fetch (max 1000)
-            
-        Returns:
-            List of LiquidationEvent objects
+        Fast-fails if endpoint returns auth error (401/403).
+        Caches permanent failures to avoid blocking retries.
         """
+        # Check fail cache first — skip if endpoint recently returned auth error
+        fail_key = f"fail_forceOrders_{symbol}"
+        with self._fail_cache_lock:
+            if fail_key in self._fail_cache:
+                fail_time = self._fail_cache[fail_key]
+                if time.time() - fail_time < self._fail_cache_ttl:
+                    return []  # Skip — endpoint auth-failed recently
+        
         cache_key = f"liq_{symbol}_{limit}"
         cached = self._get_cached(cache_key)
         if cached is not None:
@@ -129,6 +139,18 @@ class EnhancedDataV2:
                 "symbol": symbol.upper(),
                 "limit": min(limit, 1000)
             })
+            
+            # Check for auth errors in response (BinanceAPI now returns dict instead of raising)
+            if isinstance(data, dict) and data.get("error"):
+                error_type = data.get("error", "")
+                if "client_error" in error_type or "401" in error_type or "403" in error_type:
+                    # Cache this as a permanent failure — don't retry for 5 min
+                    with self._fail_cache_lock:
+                        self._fail_cache[fail_key] = time.time()
+                    logger.debug(f"[EnhancedV2] forceOrders auth-failed for {symbol}, caching skip for 5min")
+                    return []
+                # Other API error — return empty but don't cache as permanent failure
+                return []
             
             if not isinstance(data, list):
                 return []

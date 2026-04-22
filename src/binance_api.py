@@ -59,24 +59,69 @@ class BinanceFuturesAPI:
         logger.info(f"[BinanceAPI] Connected to {self.base_url}")
 
     def _get(self, path: str, params: Optional[dict] = None, timeout: int = 15) -> dict:
-        """Make GET request with rate limiting and exponential backoff with jitter."""
+        """Make GET request with rate limiting and exponential backoff with jitter.
+        
+        Fast-fail on 4xx client errors (401/403/429) — no retry on auth/permanent errors.
+        Only retry on network errors and 5xx server errors.
+        """
         url = f"{self.base_url}{path}"
         last_error = None
 
         for attempt in range(MAX_RETRIES):
             try:
-                # Acquire rate limit token before making request
                 self._rate_limiter.acquire()
 
                 resp = self.session.get(url, params=params, timeout=timeout)
+                
+                # Fast-fail on client errors (auth, forbidden, not found)
+                # These won't resolve with retries
+                if resp.status_code in (401, 403, 404, 400):
+                    logger.warning(
+                        f"[BinanceAPI] Client error {resp.status_code} for {path} "
+                        f"(no retry): {resp.text[:200]}"
+                    )
+                    return {"error": f"client_error_{resp.status_code}", "msg": resp.text[:200]}
+                
+                if resp.status_code == 429:
+                    # Rate limited — single retry after 60s backoff
+                    if attempt == 0:
+                        logger.warning(f"[BinanceAPI] Rate limited (429), backing off 60s")
+                        time.sleep(60)
+                        continue
+                    return {"error": "rate_limited", "msg": "429 Too Many Requests"}
+                
                 resp.raise_for_status()
                 return resp.json()
+            except (requests.Timeout, requests.ConnectionError) as e:
+                # Network errors — retry with backoff
+                last_error = e
+                if attempt < MAX_RETRIES - 1:
+                    base_delay = 0.5
+                    delay = min(base_delay * (2 ** attempt) + random.uniform(0, 0.5), 30)
+                    logger.warning(
+                        f"[BinanceAPI] Network error (attempt {attempt + 1}/{MAX_RETRIES}): "
+                        f"{e}. Retrying in {delay:.1f}s..."
+                    )
+                    time.sleep(delay)
+            except requests.HTTPError as e:
+                status = e.response.status_code if e.response else 0
+                if 400 <= status < 500:
+                    # Client errors — don't retry
+                    logger.warning(f"[BinanceAPI] HTTP {status} for {path} (no retry)")
+                    return {"error": f"http_error_{status}", "msg": str(e)[:200]}
+                # 5xx — server error, retry
+                last_error = e
+                if attempt < MAX_RETRIES - 1:
+                    delay = min(2 ** attempt + random.uniform(0, 0.5), 30)
+                    logger.warning(
+                        f"[BinanceAPI] Server error {status} (attempt {attempt + 1}/{MAX_RETRIES}): "
+                        f"{e}. Retrying in {delay:.1f}s..."
+                    )
+                    time.sleep(delay)
             except (requests.RequestException, ValueError) as e:
                 last_error = e
                 if attempt < MAX_RETRIES - 1:
-                    # Exponential backoff with jitter: base_delay * 2^attempt + random
-                    base_delay = 0.5
-                    delay = min(base_delay * (2 ** attempt) + random.uniform(0, 0.5), 30)
+                    delay = min(0.5 * (2 ** attempt) + random.uniform(0, 0.5), 15)
                     logger.warning(
                         f"[BinanceAPI] Request failed (attempt {attempt + 1}/{MAX_RETRIES}): "
                         f"{e}. Retrying in {delay:.1f}s..."

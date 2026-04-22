@@ -83,9 +83,35 @@ regime:
 
 # Risk parameters (for SL/TP calculation)
 risk:
-  sl_atr_multiplier: 1.5     # SL = entry - (ATR * multiplier)
-  tp_atr_multiplier: 3.0     # TP = entry + (ATR * multiplier)
+  sl_atr_multiplier: 1.5     # Default SL multiplier (overridden by regime-specific)
+  tp_atr_multiplier: 3.0     # Default TP multiplier (overridden by regime-specific)
   max_risk_pct: 0.02         # Max 2% risk per trade (position sizing reference)
+
+# Trading Sessions (UTC)
+sessions:
+  enabled: true
+  asia:
+    start_utc: 0
+    end_utc: 8
+    description: "Tokyo/Singapore session"
+  london:
+    start_utc: 8
+    end_utc: 16
+    description: "London/European session (best WR)"
+  new_york:
+    start_utc: 13
+    end_utc: 22
+    description: "NY/American session"
+  london_ny_overlap:
+    start_utc: 13
+    end_utc: 16
+    description: "London-NY overlap (highest liquidity)"
+
+# Adaptive Learning
+adaptive:
+  decay_factor: 0.95
+  session_feedback: true
+  reversal_detection: true
 
 # Microstructure Data (V2) — Real liquidations, whale flow, order book
 microstructure:

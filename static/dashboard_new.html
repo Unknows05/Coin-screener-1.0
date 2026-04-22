@@ -105,6 +105,10 @@
             </div>
             <div class="flex items-center gap-4">
                 <div class="glass px-4 py-2 rounded-xl">
+                    <span class="text-xs text-slate-500 uppercase tracking-wider">Session</span>
+                    <div class="text-white font-semibold" id="current-session">—</div>
+                </div>
+                <div class="glass px-4 py-2 rounded-xl">
                     <span class="text-xs text-slate-500 uppercase tracking-wider">Last Scan</span>
                     <div class="text-white font-semibold" id="last-scan">—</div>
                 </div>
@@ -389,8 +393,8 @@
         // Request deduplication registry
         const activeRequests = new Map();
 
-        // API Helper with timeout and deduplication
-        async function api(endpoint, timeout = 8000) {
+        // API Helper with timeout, deduplication, and graceful error handling
+        async function api(endpoint, timeout = 10000) {
             // Cancel existing request for same endpoint
             if (activeRequests.has(endpoint)) {
                 activeRequests.get(endpoint).abort();
@@ -411,10 +415,13 @@
             } catch (e) {
                 activeRequests.delete(endpoint);
                 if (e.name === 'AbortError') {
-                    return { ok: false, error: 'Request cancelled' };
+                    // Timeout — don't show error, return cached data indicator
+                    console.warn(`[Dashboard] API timeout: ${endpoint}`);
+                    return { ok: false, error: 'timeout' };
                 }
-                console.error(`API Error ${endpoint}:`, e);
-                return { ok: false, error: e.message };
+                // Network error — server may be busy scanning, return gracefully
+                console.warn(`[Dashboard] API unavailable: ${endpoint} — ${e.message}`);
+                return { ok: false, error: 'network_error' };
             }
         }
 
@@ -479,10 +486,13 @@
                 } else {
                     console.log('[Dashboard] Scan data unchanged, skipping render');
                 }
+            } else if (scan.error === 'timeout' || scan.error === 'network_error') {
+                // Server busy (likely scanning) -- don't show error, keep existing data
+                console.log('[Dashboard] API busy, keeping existing data');
             } else if (!state.scanData) {
                 // Only show error on first load
                 document.getElementById('signals-tbody').innerHTML = `
-                    <tr><td colspan="7" class="py-8 text-center text-slate-500">
+                    <tr><td colspan="8" class="py-8 text-center text-slate-500">
                         No scan data. <button onclick="forceRefresh()" class="text-amber-400 hover:underline">Run scan</button>
                     </td></tr>
                 `;
@@ -500,13 +510,15 @@
 
             // Update history (reduced limit for performance)
             if (history.ok && history.data) {
-                const historyHash = fastHash(history.data.slice(0, 10)); // Compare only first 10
+                const historyHash = fastHash(history.data.slice(0, 10));
                 if (historyHash !== state._cache.historyHash) {
                     state._cache.historyHash = historyHash;
                     state.historyData = history.data;
                     updateCalendar(history.data);
                     updateHistory(history.data);
                 }
+            } else if (history.error === 'timeout' || history.error === 'network_error') {
+                console.log('[Dashboard] History API busy, keeping existing data');
             }
 
             // Update status
@@ -607,6 +619,31 @@
                 status.last_scan ? new Date(status.last_scan).toLocaleTimeString() : '—';
             document.getElementById('next-scan').textContent = 
                 status.next_scan ? new Date(status.next_scan).toLocaleTimeString() : '—';
+            
+            // Session indicator
+            const utcHour = new Date().getUTCHours();
+            let sessionName, sessionColor;
+            if (utcHour >= 13 && utcHour < 16) {
+                sessionName = 'LONDON/NY';
+                sessionColor = '#fbbf24';
+            } else if (utcHour >= 8 && utcHour < 16) {
+                sessionName = 'LONDON';
+                sessionColor = '#10b981';
+            } else if (utcHour >= 13 || utcHour < 22) {
+                sessionName = 'NEW YORK';
+                sessionColor = '#3b82f6';
+            } else if (utcHour >= 0 && utcHour < 8) {
+                sessionName = 'ASIA';
+                sessionColor = '#8b5cf6';
+            } else {
+                sessionName = 'OFF-HOURS';
+                sessionColor = '#64748b';
+            }
+            const sessionEl = document.getElementById('current-session');
+            if (sessionEl) {
+                sessionEl.textContent = sessionName;
+                sessionEl.style.color = sessionColor;
+            }
             
             // Date range
             const today = new Date();
@@ -709,12 +746,12 @@
 
                 const rowOpacity = isBlocked ? 'opacity-70' : '';
 
-                html += `<tr class="border-b border-white/5 hover:bg-white/[0.02] transition-colors ${rowOpacity}">
+                <html += `<tr class="border-b border-white/5 hover:bg-white/[0.02] transition-colors ${rowOpacity}">
                     <td class="py-4 px-4"><span class="text-white font-bold text-sm">${escapeHtml(s.symbol || '—')}</span></td>
                     <td class="py-4 px-4"><span class="${signalColor} font-bold">${escapeHtml(s.signal)}</span></td>
                     <td class="py-4 px-4 text-slate-300 text-sm">$${formatPrice(price)}</td>
                     <td class="py-4 px-4 text-white">${escapeHtml(s.confidence || 0)}%</td>
-                    <td class="py-4 px-4 text-slate-400 text-xs">${escapeHtml(regime)}</td>
+                    <td class="py-4 px-4 text-slate-400 text-xs">${escapeHtml(regime)}${s.session ? '<br><span class="text-[9px] text-slate-600">' + escapeHtml(s.session) + '</span>' : ''}</td>
                     <td class="py-4 px-4">
                         <div class="flex items-center gap-2">
                             <div class="w-12 h-1.5 bg-white/10 rounded-full overflow-hidden">
@@ -722,6 +759,7 @@
                             </div>
                             <span class="text-[10px] text-slate-500">${risk}</span>
                         </div>
+                        ${s.position_reduction && s.position_reduction < 1 ? '<div class="text-[9px] text-amber-400 mt-1">' + Math.round(s.position_reduction * 100) + '% size</div>' : ''}
                     </td>
                     <td class="py-4 px-4 text-[10px] text-slate-400">
                         <div class="flex flex-col gap-0.5">

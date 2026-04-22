@@ -15,6 +15,8 @@ import httpx
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse, FileResponse
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from concurrent.futures import ThreadPoolExecutor
+import functools
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -26,7 +28,8 @@ from src.liquidation import liquidation_heatmap, update_liquidation_data
 engine = None
 scheduler = None
 config = {}
-_background_tasks = set()  # Track fire-and-forget tasks
+_background_tasks = set()
+_scan_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="scan")
 
 # ---- Logging ----
 Path("data").mkdir(exist_ok=True)
@@ -93,12 +96,13 @@ async def lifespan(app: FastAPI):
 # ---- Background Task ----
 
 async def auto_scan():
-    """Background auto-scan job."""
+    """Background auto-scan job — runs scan in thread pool to not block API."""
+    loop = asyncio.get_event_loop()
     try:
         logger.info("[Scheduler] Triggering auto-scan...")
-        result = engine.scan()
+        # Run heavy scan in thread pool to avoid blocking the API event loop
+        result = await loop.run_in_executor(_scan_executor, engine.scan)
         if result.get("ok"):
-            # Update next scan time
             interval = config.get("scan", {}).get("interval_minutes", 15)
             next_run = datetime.now() + timedelta(minutes=interval)
             engine.set_next_scan(next_run.isoformat())
@@ -267,6 +271,63 @@ async def get_rl_report():
         return {"ok": True, "report": report}
     except Exception as e:
         logger.error(f"RL Report API Error: {e}")
+        return {"ok": False, "error": str(e)}
+
+
+@app.get("/api/session")
+async def get_session_info():
+    """Get current trading session context."""
+    try:
+        ctx = engine.session_filter.get_session_context()
+        reversal = engine.rl_optimizer.detect_regime_reversal()
+        return {
+            "ok": True,
+            "session": ctx,
+            "reversal": reversal,
+        }
+    except Exception as e:
+        logger.error(f"Session API Error: {e}")
+        return {"ok": False, "error": str(e)}
+
+
+@app.get("/api/feedback")
+async def get_outcome_feedback():
+    """Get dynamic outcome feedback — proves the system learns from data."""
+    try:
+        from src.outcome_feedback import get_feedback
+        fb = get_feedback(str(Path("data/screener.db")))
+        report = fb.get_report()
+        report["ok"] = True
+        return report
+    except Exception as e:
+        logger.error(f"Feedback API Error: {e}")
+        return {"ok": False, "error": str(e)}
+
+
+@app.get("/api/learning")
+async def get_learning_state():
+    """Get Bayesian learning state — shows what the system has learned."""
+    try:
+        from src.learning_engine import get_learning_engine
+        engine_learn = get_learning_engine(str(Path("data/screener.db")))
+        state = engine_learn.get_report()
+        # Add explanation
+        explanation = {
+            "framework": "Bayesian Beta-Binomial Conjugate",
+            "how_it_works": [
+                "1. Prior: Beta(2,2) = uniform belief (50% WR)",
+                "2. Each WIN: alpha += 1 (more evidence for high WR)",
+                "3. Each LOSS: beta += 1 (more evidence for low WR)",
+                "4. Posterior: Beta(alpha, beta) = learned WR estimate",
+                "5. After 30+ trades: converges to true WR",
+                "6. Position size & score penalty derived from posterior",
+            ],
+            "convergence": "After ~30 trades per combo, believes approach true WR",
+            "last_updated": datetime.now().isoformat(),
+        }
+        return {"ok": True, "beliefs": state, "explanation": explanation}
+    except Exception as e:
+        logger.error(f"Learning API Error: {e}")
         return {"ok": False, "error": str(e)}
 
 

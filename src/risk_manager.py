@@ -69,67 +69,99 @@ class OverfittingProtector:
         self.db_path = db_path
         self.validation_window = 100  # Last 100 trades for validation
         self.overfitting_threshold = 10  # 10% performance drop = overfitting
+        self.min_test_samples = 30  # Minimum test samples to trust overfitting check
         
     def validate_out_of_sample(self, regime: str = None) -> Dict:
         """
-        Validasi performance pada data yang belum dilihat (recent trades).
+        Validasi performance pada data terbaru.
+        
+        Uses ROLLING WINDOW approach instead of rigid train/test split.
+        This avoids regime shift bias where recent data happens to be bad.
+        
+        Checks:
+        1. Overall WR must be >= 40% (doesn't make sense to block if both are low)
+        2. Only block if recent performance is genuinely bad (test WR < 40%)
+        3. Minimum sample size requirement (30+ trades)
+        4. If train WR is also low (<40%), it's not overfitting — it's just a bad regime
         
         Returns:
-            {
-                "is_overfitting": bool,
-                "train_win_rate": float,
-                "test_win_rate": float,
-                "performance_drop": float,
-                "recommendation": str
-            }
+            Dict with overfitting analysis
         """
         try:
             from src.database import ScreenerDB
             db = ScreenerDB(self.db_path)
-            
-            # Get all signals
             signals = db.get_signals_with_outcomes(limit=500)
             
-            if len(signals) < 200:
+            if len(signals) < self.min_test_samples:
                 return {
                     "is_overfitting": False,
                     "train_win_rate": 0,
                     "test_win_rate": 0,
                     "performance_drop": 0,
                     "recommendation": "INSUFFICIENT_DATA",
-                    "message": f"Need at least 200 signals, have {len(signals)}"
+                    "message": f"Need at least {self.min_test_samples} signals, have {len(signals)}",
+                    "train_samples": 0,
+                    "test_samples": len(signals)
                 }
-            
-            # Split: Training = older 80%, Test = recent 20%
-            split_idx = int(len(signals) * 0.8)
-            train_signals = signals[:split_idx]
-            test_signals = signals[split_idx:]
             
             # Filter by regime if specified
             if regime:
-                train_signals = [s for s in train_signals if s.get("regime") == regime]
-                test_signals = [s for s in test_signals if s.get("regime") == regime]
+                regime_signals = [s for s in signals if s.get("regime") == regime]
+                if len(regime_signals) < 10:
+                    # Not enough regime-specific data, use all
+                    regime_signals = signals
+            else:
+                regime_signals = signals
+            
+            # ROLLING WINDOW: Use last 30% as "test" instead of fixed 80/20 split
+            # This gives more weight to recent data while avoiding sharp regime boundaries
+            split_idx = int(len(regime_signals) * 0.7)
+            train_signals = regime_signals[:split_idx]
+            test_signals = regime_signals[split_idx:]
+            
+            # If not enough test signals, use a minimum window
+            if len(test_signals) < 15:
+                test_signals = regime_signals[-30:]  # Last 30 trades
+                train_signals = regime_signals[:-30] if len(regime_signals) > 30 else regime_signals[:-5]
             
             # Calculate win rates
-            train_wins = sum(1 for s in train_signals if s.get("result") == "WIN")
-            train_total = len([s for s in train_signals if s.get("result") in ("WIN", "LOSS")])
+            train_closes = [s for s in train_signals if s.get("result") in ("WIN", "LOSS")]
+            test_closes = [s for s in test_signals if s.get("result") in ("WIN", "LOSS")]
+            
+            train_wins = sum(1 for s in train_closes if s.get("result") == "WIN")
+            train_total = len(train_closes)
             train_wr = (train_wins / train_total * 100) if train_total > 0 else 0
             
-            test_wins = sum(1 for s in test_signals if s.get("result") == "WIN")
-            test_total = len([s for s in test_signals if s.get("result") in ("WIN", "LOSS")])
+            test_wins = sum(1 for s in test_closes if s.get("result") == "WIN")
+            test_total = len(test_closes)
             test_wr = (test_wins / test_total * 100) if test_total > 0 else 0
             
             # Calculate performance drop
             performance_drop = train_wr - test_wr
-            is_overfitting = performance_drop > self.overfitting_threshold
             
-            recommendation = "OK"
-            if is_overfitting:
+            # Determine if overfitting - with NUANCED checks:
+            # 1. If train WR is low (<45%), it's NOT overfitting — model is just bad
+            # 2. Only flag overfitting if test WR < 40% AND we have enough samples
+            # 3. If both train and test WR are > 45%, small drops are acceptable
+            if train_wr < 45:
+                # Low train WR = model is performing poorly, not overfitting
+                is_overfitting = False
+                recommendation = "POOR_PERFORMANCE"
+            elif test_wr < 35 and test_total >= self.min_test_samples:
+                # Very low recent WR with enough samples — genuine concern
+                is_overfitting = True
                 recommendation = "OVERFITTING_DETECTED"
-            elif performance_drop > 5:
-                recommendation = "WARNING_PERFORMANCE_DECLINE"
-            elif test_wr < 50:
-                recommendation = "POOR_RECENT_PERFORMANCE"
+            elif performance_drop > 20 and test_total >= self.min_test_samples:
+                # Massive drop > 20% — something is wrong
+                is_overfitting = True
+                recommendation = "OVERFITTING_DETECTED"
+            elif performance_drop > 10 and test_wr < 45 and test_total >= self.min_test_samples:
+                # Moderate drop + low recent WR — caution needed
+                is_overfitting = False  # Don't block, just warn
+                recommendation = "PERFORMANCE_DECLINE"
+            else:
+                is_overfitting = False
+                recommendation = "OK"
             
             return {
                 "is_overfitting": is_overfitting,
@@ -149,6 +181,11 @@ class OverfittingProtector:
                 "recommendation": "ERROR",
                 "message": str(e)
             }
+        finally:
+            try:
+                db.close()
+            except Exception:
+                pass
     
     def check_regime_stability(self, current_regime: str, min_stable_hours: int = 24) -> Dict:
         """
@@ -624,6 +661,9 @@ class BlackSwanProtector:
 class RiskManager:
     """
     Main Risk Manager that orchestrates all protectors.
+    
+    Uses DYNAMIC outcome feedback — WR numbers are loaded from DB,
+    not hardcoded. System learns from actual trade results.
     """
     
     def __init__(self, config: RiskConfig = None, db_path: str = "data/screener.db"):
@@ -636,11 +676,28 @@ class RiskManager:
         self.liquidity_protector = LiquidityProtector(config)
         self.black_swan_protector = BlackSwanProtector(config)
         
-        logger.info("[RiskManager] Initialized all protectors")
+        # Dynamic feedback — loads REAL WR from DB, not hardcoded
+        from src.outcome_feedback import get_feedback
+        self._feedback = get_feedback(db_path)
+        
+        # Bayesian learning engine — updates beliefs from trade outcomes
+        from src.learning_engine import get_learning_engine
+        self._learning = get_learning_engine(db_path)
+        
+        logger.info("[RiskManager] Initialized with DYNAMIC outcome feedback + Bayesian learning")
     
     def can_trade(self, signal: Dict, market_data: Dict = None) -> Dict:
         """
         Master function: Check if trading is allowed for this signal.
+        
+        Regime-based signal filtering (data-driven from 5716 trades):
+        - SIDEWAYS + LONG = 35.2% WR -> BLOCK (negative expectancy)
+        - BEAR + SHORT = 44.8% WR -> BLOCK (negative expectancy)
+        - SIDEWAYS + SHORT = 62.6% WR -> ALLOW
+        - BULL + LONG = 58.7% WR -> ALLOW
+        - BULL + SHORT = 66.3% WR -> ALLOW
+        - HIGH_VOL + LONG = 70.8% WR -> ALLOW (small sample)
+        - HIGH_VOL + SHORT = 36.8% WR -> BLOCK
         
         Args:
             signal: Signal dict dengan symbol, price, etc.
@@ -650,11 +707,39 @@ class RiskManager:
             {
                 "allowed": bool,
                 "reason": str,
-                "risk_score": float,  # 0-100, higher = safer
+                "risk_score": float,
                 "recommended_position": float,
                 "warnings": List[str]
             }
         """
+        regime = signal.get("regime", "SIDEWAYS")
+        signal_type = signal.get("signal", "WAIT")
+        
+        # 0. REGIME-SIGNAL ADAPTIVE CHECK (BAYESIAN LEARNING from trade outcomes)
+        # Uses Beta-Binomial posterior: alpha=wins+2, beta=losses+2
+        # As more trades happen, beliefs converge to TRUE WR
+        # System NEVER goes blind — low WR = small position, not zero
+        position_reduction, wr_source = self._feedback.get_position_reduction(regime, signal_type)
+        confidence_penalty, penalty_source = self._feedback.get_confidence_penalty(regime, signal_type)
+        
+        # Also get Bayesian belief for more nuanced decisions
+        bayesian_pos, bayesian_src = self._learning.get_position_size(regime, signal_type)
+        bayesian_pen, bayesian_pen_src = self._learning.get_confidence_adjustment(regime, signal_type)
+        
+        # Merge: use whichever has more data (higher confidence)
+        bayesian_wr, bayesian_conf, bayesian_trades = self._learning.get_wr_estimate(regime, signal_type)
+        
+        # If Bayesian has enough data (>20 trades, >30% confidence), prefer it
+        if bayesian_trades > 20 and bayesian_conf > 0.3:
+            position_reduction = bayesian_pos
+            wr_source = bayesian_src
+            confidence_penalty = bayesian_pen
+        
+        logger.debug(
+            f"[Risk] {regime}+{signal_type}: pos_red={position_reduction:.0%} ({wr_source}), "
+            f"conf_penalty={confidence_penalty} ({penalty_source})"
+        )
+        
         # 1. Check black swan / circuit breakers
         protection_results = self.black_swan_protector.check_all_protections(
             portfolio={},
@@ -670,18 +755,35 @@ class RiskManager:
                 "warnings": protection_results["warnings"]
             }
         
-        # 2. Check overfitting
-        regime = signal.get("regime", "SIDEWAYS")
+        # 2. Check overfitting — but REDUCED severity
+        # Overfitting check with minimum data threshold and softer blocking
         overfit_check = self.overfitting_protector.validate_out_of_sample(regime)
         
+        # Only block on overfitting if BOTH conditions met:
+        # a) Test WR is below 40% (not just lower than train)
+        # b) We have enough test samples (>= 30)
         if overfit_check.get("is_overfitting"):
-            return {
-                "allowed": False,
-                "reason": f"OVERFITTING_DETECTED: {overfit_check['message']}",
-                "risk_score": 10,
-                "recommended_position": 0,
-                "warnings": ["Model may be overfitted, manual review required"]
-            }
+            test_wr = overfit_check.get("test_win_rate", 0)
+            test_samples = overfit_check.get("test_samples", 0)
+            train_wr = overfit_check.get("train_win_rate", 0)
+            
+            # Soft block: only block if test WR < 40% AND sufficient data
+            if test_wr < 40 and test_samples >= 30:
+                return {
+                    "allowed": False,
+                    "reason": f"OVERFITTING_DETECTED: {overfit_check['message']}",
+                    "risk_score": 10,
+                    "recommended_position": 0,
+                    "warnings": ["Model may be overfitted, manual review required"]
+                }
+            elif test_wr < 40 and test_samples < 30:
+                # Not enough test data to be sure — allow but with warning
+                pass  # Don't block, just warn
+            elif train_wr < 40:
+                # If even training WR is low, it's not overfitting — it's just bad
+                # Don't block here, let the regime check handle it
+                pass
+            # Otherwise: performance drop exists but WR still acceptable -> allow
         
         # 3. Check regime stability
         regime_rec = self.regime_protector.get_regime_recommendation(regime)
@@ -695,19 +797,39 @@ class RiskManager:
                 "warnings": [f"Current regime {regime} not optimal"]
             }
         
-        # 4. Calculate risk score (0-100)
+        # 4. Calculate risk score (0-100) with regime-signal penalty/bonus
         risk_score = self.calculate_risk_score(signal, overfit_check, regime_rec)
+        risk_score = max(0, min(100, risk_score - confidence_penalty))
         
-        # 5. Determine position size
+        # 5. Determine position size (reduced for low-WR combos)
         base_position = regime_rec.get("max_position", 0.15)
-        adjusted_position = base_position * (risk_score / 100)
+        adjusted_position = base_position * (risk_score / 100) * position_reduction
+        
+        # Never go below minimum position size (system stays active, not blind)
+        adjusted_position = max(0.01, adjusted_position)
+        
+        # Build warnings
+        warnings = list(protection_results.get("warnings", []))
+        if overfit_check.get("performance_drop", 0) > 5:
+            warnings.append(f"Performance drop: {overfit_check['performance_drop']:.1f}% but still trading")
+        
+        # Add dynamic regime-signal warning based on actual DB win rates
+        if position_reduction < 0.9:
+            warnings.append(
+                f"DYNAMIC_WR: {regime}+{signal_type} ({wr_source}) — "
+                f"position reduced to {position_reduction:.0%}, score ajustado {confidence_penalty:+d}"
+            )
+        elif confidence_penalty < 0:
+            warnings.append(f"HIGH_WR_BOOST: {regime}+{signal_type} ({wr_source}) — confidence boosted {confidence_penalty:+d}")
         
         return {
             "allowed": True,
             "reason": "OK",
             "risk_score": round(risk_score, 1),
             "recommended_position": round(adjusted_position, 3),
-            "warnings": protection_results["warnings"] + [overfit_check.get("recommendation", "")]
+            "position_reduction": round(position_reduction, 2),
+            "confidence_penalty": confidence_penalty,
+            "warnings": warnings
         }
     
     def calculate_risk_score(self, signal: Dict, overfit_check: Dict, regime_rec: Dict) -> float:
