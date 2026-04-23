@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-04-23T05:17:45.424992",
+  "last_updated": "2026-04-23T22:44:34.407335",
   "beliefs": {
     "BEAR+LONG": {
       "regime": "BEAR",
@@ -14,72 +14,72 @@
     "BEAR+SHORT": {
       "regime": "BEAR",
       "signal": "SHORT",
-      "alpha": 233.0,
-      "beta": 287.0,
-      "wr_estimate": 44.8,
+      "alpha": 784.0,
+      "beta": 368.0,
+      "wr_estimate": 68.1,
       "confidence": 100.0,
-      "total_trades": 516,
-      "last_updated": "2026-04-23T05:17:45.424977"
+      "total_trades": 1148,
+      "last_updated": "2026-04-23T22:44:34.399597"
     },
     "BULL+LONG": {
       "regime": "BULL",
       "signal": "LONG",
-      "alpha": 576.0,
-      "beta": 405.0,
-      "wr_estimate": 58.8,
+      "alpha": 583.0,
+      "beta": 554.0,
+      "wr_estimate": 51.3,
       "confidence": 100.0,
-      "total_trades": 977,
-      "last_updated": "2026-04-23T05:17:45.424980"
+      "total_trades": 1133,
+      "last_updated": "2026-04-23T22:44:34.407091"
     },
     "BULL+SHORT": {
       "regime": "BULL",
       "signal": "SHORT",
-      "alpha": 246.0,
-      "beta": 126.0,
-      "wr_estimate": 66.3,
+      "alpha": 459.0,
+      "beta": 128.0,
+      "wr_estimate": 78.4,
       "confidence": 100.0,
-      "total_trades": 368,
-      "last_updated": "2026-04-23T05:17:45.424982"
+      "total_trades": 583,
+      "last_updated": "2026-04-23T22:44:34.406578"
     },
     "HIGH_VOL+LONG": {
       "regime": "HIGH_VOL",
       "signal": "LONG",
       "alpha": 48.0,
-      "beta": 21.0,
-      "wr_estimate": 70.8,
+      "beta": 31.0,
+      "wr_estimate": 61.3,
       "confidence": 100.0,
-      "total_trades": 65,
-      "last_updated": "2026-04-23T05:17:45.424984"
+      "total_trades": 75,
+      "last_updated": "2026-04-23T06:25:23.006190"
     },
     "HIGH_VOL+SHORT": {
       "regime": "HIGH_VOL",
       "signal": "SHORT",
-      "alpha": 23.0,
+      "alpha": 26.0,
       "beta": 38.0,
-      "wr_estimate": 36.8,
+      "wr_estimate": 40.0,
       "confidence": 100.0,
-      "total_trades": 57,
-      "last_updated": "2026-04-23T05:17:45.424986"
+      "total_trades": 60,
+      "last_updated": "2026-04-23T07:23:54.465057"
     },
     "SIDEWAYS+LONG": {
       "regime": "SIDEWAYS",
       "signal": "LONG",
-      "alpha": 246.0,
-      "beta": 451.0,
-      "wr_estimate": 35.2,
+      "alpha": 251.0,
+      "beta": 531.0,
+      "wr_estimate": 32.0,
       "confidence": 100.0,
-      "total_trades": 693,
-      "last_updated": "2026-04-23T05:17:45.424988"
+      "total_trades": 778,
+      "last_updated": "2026-04-23T22:44:34.401481"
     },
     "SIDEWAYS+SHORT": {
       "regime": "SIDEWAYS",
       "signal": "SHORT",
-      "alpha": 1911.0,
-      "beta": 1143.0,
-      "wr_estimate": 62.6,
+      "alpha": 7751.0,
+      "beta": 1203.0,
+      "wr_estimate": 86.6,
       "confidence": 100.0,
-      "total_trades": 3050,
-      "last_updated": "2026-04-23T05:17:45.424990"
+      "total_trades": 8950,
+      "last_updated": "2026-04-23T22:44:34.407332"
     }
   }
 }

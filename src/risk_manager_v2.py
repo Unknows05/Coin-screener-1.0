@@ -94,6 +94,8 @@ class RiskManagerV2(RiskManager):
                 "reason": liq_check["reason"],
                 "risk_score": 5,
                 "recommended_position": 0,
+                "position_reduction": base_result.get("position_reduction", 1.0),
+                "confidence_penalty": base_result.get("confidence_penalty", 0),
                 "warnings": base_result.get("warnings", []) + [liq_check["warning"]]
             }
         
@@ -138,6 +140,8 @@ class RiskManagerV2(RiskManager):
             "reason": "OK" if allowed else "MICROSTRUCTURE_RISK_DETECTED",
             "risk_score": round(adjusted_score, 1),
             "recommended_position": round(adjusted_position, 3) if allowed else 0,
+            "position_reduction": base_result.get("position_reduction", 1.0),
+            "confidence_penalty": base_result.get("confidence_penalty", 0),
             "warnings": all_warnings,
             "microstructure": {
                 "liquidation_pressure": liq_check.get("pressure", "neutral"),

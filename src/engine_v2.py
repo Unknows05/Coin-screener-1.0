@@ -144,10 +144,11 @@ class ScreeningEngineV2:
         # Bounded deque to prevent memory leak - keeps last 100 alerts
         self._last_alerts: deque[dict] = deque(maxlen=100)
         
-        # Statistics
+        # Statistics (persisted from last scan)
         self._blocked_by_liquidation: int = 0
         self._blocked_by_divergence: int = 0
         self._microstructure_enhanced: int = 0
+        self._last_micro_coins_analyzed: int = 0
 
         logger.info(
             f"[EngineV2] Initialized: {len(self.symbols)} symbols, "
@@ -448,8 +449,7 @@ class ScreeningEngineV2:
                         # Add risk info to signal
                         signal_result["risk_check"] = risk_check
                         signal_result["risk_score"] = risk_check.get("risk_score", 0)
-                        if risk_check.get("position_reduction", 1.0) < 1.0:
-                            signal_result["position_reduction"] = risk_check.get("position_reduction", 1.0)
+                        signal_result["position_reduction"] = risk_check.get("position_reduction", 1.0)
                         
                         # Log warnings
                         if risk_check.get("warnings"):
@@ -505,6 +505,7 @@ class ScreeningEngineV2:
                 self._last_scan_time = scan_result["timestamp"]
                 self._last_elapsed = elapsed
                 self._is_scanning = False
+                self._last_micro_coins_analyzed = microstructure_applied
 
             # Cache to file
             self._save_cache(scan_result)
@@ -621,7 +622,7 @@ class ScreeningEngineV2:
                 total_blocked = sum(1 for r in self._last_result if r.get("risk_blocked"))
                 micro_stats = {
                     "enabled": True,
-                    "coins_analyzed": sum(1 for r in self._last_result if r.get("microstructure")),
+                    "coins_analyzed": self._last_micro_coins_analyzed,
                     "blocked_by_liquidation": blocked_liq,
                     "blocked_by_divergence": blocked_div,
                     "total_blocked": total_blocked
@@ -683,13 +684,17 @@ class ScreeningEngineV2:
                 "last_error": self._last_error
             }
 
-    def get_signals_history(self, limit: int = 100) -> list[dict]:
+    def get_signals_history(self, limit: int = 100, result_filter: str = None, days: int = None) -> list[dict]:
         """Get signal history from database with outcomes."""
-        return self.db.get_signals_with_outcomes(limit)
+        return self.db.get_signals_with_outcomes(limit, result_filter, days)
 
     def get_calendar(self, year: int, month: int) -> list[dict]:
         """Get calendar view for a month."""
         return self.db.get_calendar_month(year, month)
+
+    def get_daily_performance(self, days: int = 7) -> list[dict]:
+        """Get daily performance stats with SL/TP averages."""
+        return self.db.get_daily_performance(days)
 
     def get_db_stats(self) -> dict:
         """Get database statistics."""
@@ -719,6 +724,9 @@ class ScreeningEngineV2:
                     "session": item.get("session", ""),
                     "position_reduction": item.get("position_reduction", 1.0),
                     "atr": item.get("atr", 0),
+                    "microstructure": item.get("microstructure"),
+                    "risk_reason": item.get("risk_reason", ""),
+                    "session_context": item.get("session_context"),
                 }
                 compact_data.append(compact_item)
 

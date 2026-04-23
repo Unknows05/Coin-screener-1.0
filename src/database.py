@@ -265,31 +265,45 @@ class ScreenerDB:
             logger.error(f"[DB] get_calendar_month error: {e}")
             return []
 
-    def get_signals_with_outcomes(self, limit: int = 500) -> list[dict]:
+    def get_signals_with_outcomes(self, limit: int = 500, result_filter: str = None, days: int = None) -> list[dict]:
         """
         Get signal history with SL/TP outcomes.
-        Returns: list of signals with result, exit_price, exit_reason, etc.
-        Sorted by timestamp (most recent first), includes all result types.
+        Args:
+            limit: Max signals to return
+            result_filter: 'closed' for WIN/LOSS only, 'open' for OPEN only, None for all
+            days: Limit to last N days
         """
         try:
             c = self.conn.cursor()
-            # Get all signals ordered by timestamp, includes WIN/LOSS/OPEN
-            c.execute(
-                """SELECT
-                    id, timestamp, symbol, signal, entry_price, sl, tp,
+            query = """
+                SELECT id, timestamp, symbol, signal, entry_price, sl, tp,
                     confidence, regime, result, exit_price, exit_timestamp,
                     exit_reason, final_price, scan_date
                 FROM signals
                 WHERE signal IN ('LONG', 'SHORT')
-                ORDER BY timestamp DESC
-                LIMIT ?""",
-                (limit,)
-            )
+            """
+            params = []
+
+            if days:
+                query += " AND timestamp >= datetime('now', ?)"
+                params.append(f"-{days} days")
+
+            if result_filter == 'closed':
+                query += " AND result IN ('WIN', 'LOSS')"
+            elif result_filter == 'open':
+                query += " AND result IN ('OPEN', 'PENDING')"
+
+            if result_filter == 'closed':
+                query += " ORDER BY timestamp DESC LIMIT ?"
+            else:
+                query += " ORDER BY timestamp DESC LIMIT ?"
+            params.append(limit)
+
+            c.execute(query, params)
             rows = c.fetchall()
             signals = []
             for row in rows:
                 sig = dict(row)
-                # Calculate PNL if closed
                 entry = sig.get('entry_price', 0)
                 exit_p = sig.get('exit_price') or sig.get('final_price')
                 result = sig.get('result', 'OPEN')
@@ -303,6 +317,42 @@ class ScreenerDB:
             return signals
         except Exception as e:
             logger.error(f"[DB] get_signals_with_outcomes error: {e}")
+            return []
+
+    def get_daily_performance(self, days: int = 7) -> list[dict]:
+        """Get daily performance stats with SL/TP averages for time ranges."""
+        try:
+            c = self.conn.cursor()
+            c.execute("""
+                SELECT
+                    scan_date,
+                    COUNT(*) as total,
+                    SUM(CASE WHEN result='WIN' THEN 1 ELSE 0 END) as wins,
+                    SUM(CASE WHEN result='LOSS' THEN 1 ELSE 0 END) as losses,
+                    SUM(CASE WHEN result IN ('OPEN','PENDING') THEN 1 ELSE 0 END) as opens,
+                    ROUND(AVG(CASE WHEN result IN ('WIN','LOSS') AND sl IS NOT NULL AND entry_price > 0
+                        THEN ABS(sl - entry_price) / entry_price * 100 END), 2) as avg_sl_pct,
+                    ROUND(AVG(CASE WHEN result IN ('WIN','LOSS') AND tp IS NOT NULL AND entry_price > 0
+                        THEN ABS(tp - entry_price) / entry_price * 100 END), 2) as avg_tp_pct,
+                    SUM(CASE WHEN signal='LONG' THEN 1 ELSE 0 END) as longs,
+                    SUM(CASE WHEN signal='SHORT' THEN 1 ELSE 0 END) as shorts
+                FROM signals
+                WHERE scan_date >= date('now', ?)
+                GROUP BY scan_date
+                ORDER BY scan_date DESC
+            """, (f"-{days} days",))
+            rows = c.fetchall()
+            result = []
+            for row in rows:
+                d = dict(row)
+                wins = d.get('wins', 0) or 0
+                losses = d.get('losses', 0) or 0
+                total_closed = wins + losses
+                d['win_rate'] = round(wins / total_closed * 100, 1) if total_closed > 0 else 0
+                result.append(d)
+            return result
+        except Exception as e:
+            logger.error(f"[DB] get_daily_performance error: {e}")
             return []
 
     def close(self):

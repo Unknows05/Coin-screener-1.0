@@ -366,16 +366,29 @@ async def reset_circuit_breaker(manual: bool = True):
 
 
 @app.get("/api/signals/history")
-async def get_signals_history(limit: int = 100):
+async def get_signals_history(limit: int = 100, result: str = None, days: int = None):
     """
     Get signal history from database with SL/TP outcomes.
-    Returns: list of signals with result (WIN/LOSS/OPEN), exit_price, exit_reason
+    Query params:
+        result: 'closed' for WIN/LOSS only, 'open' for OPEN only
+        days: limit to last N days
     """
     try:
-        signals = engine.get_signals_history(limit)
+        signals = engine.get_signals_history(limit, result_filter=result, days=days)
         return {"ok": True, "data": signals, "count": len(signals)}
     except Exception as e:
         logger.error(f"Signals History API Error: {e}")
+        return {"ok": False, "error": str(e), "data": []}
+
+
+@app.get("/api/daily-performance")
+async def get_daily_performance(days: int = 7):
+    """Get daily performance stats (WR, avg SL, avg TP) for time range."""
+    try:
+        data = engine.get_daily_performance(days)
+        return {"ok": True, "data": data, "days": days}
+    except Exception as e:
+        logger.error(f"Daily Performance API Error: {e}")
         return {"ok": False, "error": str(e), "data": []}
 
 

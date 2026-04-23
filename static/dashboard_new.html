@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coin Screener Pro - Win Rate Analytics</title>
+    <title>Crypto Screener Future Market</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
@@ -22,208 +22,114 @@
             transition: all 0.3s ease;
         }
         .bg-blob-1 {
-            position: fixed;
-            top: -10%;
-            left: -10%;
-            width: 50%;
-            height: 50%;
-            background: rgba(59, 130, 246, 0.05);
-            border-radius: 50%;
-            filter: blur(160px);
-            pointer-events: none;
-            z-index: 0;
+            position: fixed; top: -10%; left: -10%; width: 50%; height: 50%;
+            background: rgba(59, 130, 246, 0.05); border-radius: 50%;
+            filter: blur(160px); pointer-events: none; z-index: 0;
         }
         .bg-blob-2 {
-            position: fixed;
-            bottom: -10%;
-            right: -10%;
-            width: 50%;
-            height: 50%;
-            background: rgba(245, 158, 11, 0.05);
-            border-radius: 50%;
-            filter: blur(160px);
-            pointer-events: none;
-            z-index: 0;
+            position: fixed; bottom: -10%; right: -10%; width: 50%; height: 50%;
+            background: rgba(245, 158, 11, 0.05); border-radius: 50%;
+            filter: blur(160px); pointer-events: none; z-index: 0;
         }
-        .tab-active {
-            color: #fbbf24;
-            border-bottom: 3px solid #fbbf24;
-        }
-        .tab-inactive {
-            color: #475569;
-        }
-        .tab-inactive:hover {
-            color: #94a3b8;
-        }
+        .tab-active { color: #fbbf24; border-bottom: 3px solid #fbbf24; }
+        .tab-inactive { color: #475569; }
+        .tab-inactive:hover { color: #94a3b8; }
         .win-positive { color: #10b981; }
         .win-negative { color: #f43f5e; }
-        .stat-row {
-            border-bottom: 1px dotted rgba(255, 255, 255, 0.1);
+        .stat-row { border-bottom: 1px dotted rgba(255, 255, 255, 0.1); }
+        .stat-row:hover { border-bottom-color: rgba(255, 255, 255, 0.2); }
+        .calendar-day { aspect-ratio: 1.2/1; position: relative; }
+        .calendar-tooltip {
+            position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9); border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px; padding: 8px 12px; font-size: 11px; white-space: nowrap;
+            z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
         }
-        .stat-row:hover {
-            border-bottom-color: rgba(255, 255, 255, 0.2);
+        .calendar-day:hover .calendar-tooltip { opacity: 1; }
+        .copy-toast {
+            position: fixed; bottom: 20px; right: 20px; background: rgba(16, 185, 129, 0.9);
+            color: white; padding: 8px 16px; border-radius: 8px; font-size: 13px;
+            z-index: 9999; opacity: 0; transition: opacity 0.3s;
         }
-        .calendar-day {
-            aspect-ratio: 1.2/1;
+        .copy-toast.show { opacity: 1; }
+        .pagination-btn {
+            padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
+            transition: all 0.2s; cursor: pointer;
         }
-        .toggle-btn {
-            cursor: pointer;
-            transition: transform 0.3s ease;
-        }
-        .toggle-btn.rotated {
-            transform: rotate(180deg);
-        }
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.02);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
+        .pagination-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); }
+        .pagination-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .pagination-btn.active { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
     </style>
 </head>
 <body class="text-slate-400 min-h-screen relative overflow-x-hidden">
-    <!-- Background Blobs -->
     <div class="bg-blob-1"></div>
     <div class="bg-blob-2"></div>
+    <div id="copy-toast" class="copy-toast">Copied!</div>
 
-    <!-- Main Container -->
     <div class="relative z-10 p-6 md:p-12 max-w-7xl mx-auto">
-        
         <!-- Header -->
         <header class="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
             <div>
-                <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight mb-1">Win Rate Analytics</h1>
-                <p class="text-sm text-slate-500">Coin Screener Pro • Microstructure V2 Enabled</p>
+                <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight mb-1">Crypto Screener Future Market</h1>
             </div>
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-4 flex-wrap">
+                <!-- Session Box -->
                 <div class="glass px-4 py-2 rounded-xl">
                     <span class="text-xs text-slate-500 uppercase tracking-wider">Session</span>
-                    <div class="text-white font-semibold" id="current-session">—</div>
+                    <div class="text-white font-semibold" id="current-session">-</div>
+                    <div class="text-[10px] text-slate-500" id="session-hours">-</div>
                 </div>
+                <!-- Last Scan -->
                 <div class="glass px-4 py-2 rounded-xl">
                     <span class="text-xs text-slate-500 uppercase tracking-wider">Last Scan</span>
-                    <div class="text-white font-semibold" id="last-scan">—</div>
+                    <div class="text-white font-semibold" id="last-scan">-</div>
                 </div>
+                <!-- Next Scan -->
                 <div class="glass px-4 py-2 rounded-xl">
                     <span class="text-xs text-slate-500 uppercase tracking-wider">Next Scan</span>
-                    <div class="text-white font-semibold" id="next-scan">—</div>
+                    <div class="text-white font-semibold" id="next-scan">-</div>
                 </div>
+                <!-- Time Region -->
+                <div class="relative">
+                    <button id="timezone-btn" class="glass px-4 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-2 hover:bg-white/5 transition-colors">
+                        <span id="timezone-label">UTC</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+                    <div id="timezone-dropdown" class="absolute top-full right-0 mt-2 glass rounded-xl p-2 z-50 hidden min-w-[200px] max-h-[300px] overflow-y-auto">
+                        <div class="text-[10px] text-slate-500 uppercase tracking-wider mb-2 px-2">Select Region</div>
+                        <div id="timezone-list"></div>
+                    </div>
+                </div>
+                <!-- Refresh -->
                 <button id="refresh-btn" class="glass glass-hover p-3 rounded-xl text-white" title="Force Refresh">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
                 </button>
             </div>
         </header>
 
-        <!-- Summary Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <!-- Summary Cards (3 only) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <div class="glass glass-hover p-6 rounded-3xl">
                 <div class="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-2">Overall Win Rate</div>
-                <div class="text-3xl font-bold text-white" id="overall-wr">—%</div>
+                <div class="text-3xl font-bold text-white" id="overall-wr">-%</div>
                 <div class="text-xs text-slate-500 mt-1">Based on closed trades</div>
             </div>
             <div class="glass glass-hover p-6 rounded-3xl">
                 <div class="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-2">Active Signals</div>
-                <div class="text-3xl font-bold text-white" id="active-signals">—</div>
+                <div class="text-3xl font-bold text-white" id="active-signals">-</div>
                 <div class="text-xs text-slate-500 mt-1">LONG & SHORT combined</div>
             </div>
             <div class="glass glass-hover p-6 rounded-3xl">
                 <div class="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-2">BULL Regime WR</div>
-                <div class="text-3xl font-bold win-positive" id="bull-wr">—%</div>
+                <div class="text-3xl font-bold win-positive" id="bull-wr">-%</div>
                 <div class="text-xs text-slate-500 mt-1">Best performing regime</div>
             </div>
-            <div class="glass glass-hover p-6 rounded-3xl">
-                <div class="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-2">V2 Blocks</div>
-                <div class="text-3xl font-bold text-amber-400" id="v2-blocks">—</div>
-                <div class="text-xs text-slate-500 mt-1">Liquidation & divergence</div>
-            </div>
         </div>
-
-        <!-- Time Range Controls -->
-        <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
-            <div class="glass flex p-1.5 rounded-2xl">
-                <button class="time-filter px-6 py-2.5 text-xs font-bold rounded-xl transition-all duration-300 bg-white/10 text-white shadow-lg" data-range="7d">7D</button>
-                <button class="time-filter px-6 py-2.5 text-xs font-bold rounded-xl transition-all duration-300 hover:bg-white/5 hover:text-white text-slate-400" data-range="1m">1M</button>
-                <button class="time-filter px-6 py-2.5 text-xs font-bold rounded-xl transition-all duration-300 hover:bg-white/5 hover:text-white text-slate-400" data-range="3m">3M</button>
-                <button class="time-filter px-6 py-2.5 text-xs font-bold rounded-xl transition-all duration-300 hover:bg-white/5 hover:text-white text-slate-400" data-range="all">ALL</button>
-            </div>
-            
-            <div class="glass flex items-center px-5 py-2.5 rounded-2xl text-xs font-semibold">
-                <span class="text-white" id="date-range-start">—</span>
-                <span class="mx-4 opacity-20">→</span>
-                <span class="text-white" id="date-range-end">—</span>
-            </div>
-        </div>
-
-        <!-- Win Rate Analysis Panel (Collapsible) -->
-        <section class="glass rounded-[2.5rem] p-10 mb-8">
-            <div class="flex items-center justify-between mb-6">
-                <div class="flex items-center gap-4">
-                    <h2 class="text-xl font-bold text-white tracking-tight">Win Rate Analysis</h2>
-                    <button id="toggle-stats" class="glass px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-2">
-                        <span id="toggle-text">Show Less</span>
-                        <svg id="toggle-icon" class="toggle-btn w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </button>
-                </div>
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-600"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-            </div>
-            
-            <div id="stats-container" class="grid grid-cols-1 md:grid-cols-2 gap-x-24 gap-y-4">
-                <!-- Left Column (Always Visible) -->
-                <div class="space-y-4" id="stats-left">
-                    <div class="stat-row flex justify-between items-center py-2 group cursor-pointer">
-                        <span class="text-[13px] font-medium text-slate-500 group-hover:text-slate-300 transition-colors border-b border-dotted border-slate-700 pb-0.5">Total Wins</span>
-                        <span class="text-[13px] text-white font-bold" id="total-wins">—</span>
-                    </div>
-                    <div class="stat-row flex justify-between items-center py-2 group cursor-pointer">
-                        <span class="text-[13px] font-medium text-slate-500 group-hover:text-slate-300 transition-colors border-b border-dotted border-slate-700 pb-0.5">Total Losses</span>
-                        <span class="text-[13px] text-white font-bold" id="total-losses">—</span>
-                    </div>
-                    <div class="stat-row flex justify-between items-center py-2 group cursor-pointer">
-                        <span class="text-[13px] font-medium text-slate-500 group-hover:text-slate-300 transition-colors border-b border-dotted border-slate-700 pb-0.5">Win Rate</span>
-                        <div class="flex items-center gap-2">
-                            <span class="text-[13px] text-white font-bold" id="win-rate-stat">—%</span>
-                            <svg class="w-4 h-4 win-positive" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-                        </div>
-                    </div>
-                    <div class="stat-row flex justify-between items-center py-2 group cursor-pointer">
-                        <span class="text-[13px] font-medium text-slate-500 group-hover:text-slate-300 transition-colors border-b border-dotted border-slate-700 pb-0.5">Open Positions</span>
-                        <span class="text-[13px] text-white font-bold" id="open-positions">—</span>
-                    </div>
-                </div>
-                
-                <!-- Right Column (Toggleable) -->
-                <div class="space-y-4" id="stats-right">
-                    <div class="stat-row flex justify-between items-center py-2 group cursor-pointer">
-                        <span class="text-[13px] font-medium text-slate-500 group-hover:text-slate-300 transition-colors border-b border-dotted border-slate-700 pb-0.5">LONG Win Rate</span>
-                        <span class="text-[13px] text-white font-bold" id="long-wr">—%</span>
-                    </div>
-                    <div class="stat-row flex justify-between items-center py-2 group cursor-pointer">
-                        <span class="text-[13px] font-medium text-slate-500 group-hover:text-slate-300 transition-colors border-b border-dotted border-slate-700 pb-0.5">SHORT Win Rate</span>
-                        <span class="text-[13px] text-white font-bold" id="short-wr">—%</span>
-                    </div>
-                    <div class="stat-row flex justify-between items-center py-2 group cursor-pointer">
-                        <span class="text-[13px] font-medium text-slate-500 group-hover:text-slate-300 transition-colors border-b border-dotted border-slate-700 pb-0.5">BULL Regime WR</span>
-                        <span class="text-[13px] win-positive font-bold" id="bull-regime-wr">—%</span>
-                    </div>
-                    <div class="stat-row flex justify-between items-center py-2 group cursor-pointer">
-                        <span class="text-[13px] font-medium text-slate-500 group-hover:text-slate-300 transition-colors border-b border-dotted border-slate-700 pb-0.5">SIDEWAYS Regime WR</span>
-                        <span class="text-[13px] text-white font-bold" id="sideways-regime-wr">—%</span>
-                    </div>
-                    <div class="stat-row flex justify-between items-center py-2 group cursor-pointer">
-                        <span class="text-[13px] font-medium text-slate-500 group-hover:text-slate-300 transition-colors border-b border-dotted border-slate-700 pb-0.5">Signals Blocked (V2)</span>
-                        <span class="text-[13px] text-amber-400 font-bold" id="blocked-signals">—</span>
-                    </div>
-                </div>
-            </div>
-        </section>
 
         <!-- Tabs -->
         <div class="flex gap-10 border-b border-white/5 px-4 mb-8">
@@ -234,55 +140,15 @@
 
         <!-- Overview Tab -->
         <div id="tab-overview" class="tab-content">
-            <!-- Calendar Section -->
-            <section class="glass rounded-[2.5rem] p-10 mb-8">
-                <div class="flex justify-between items-center mb-8">
-                    <div class="flex items-center gap-5">
-                        <h3 class="text-xl font-bold text-white">Daily Win Rate</h3>
-                        <div class="glass flex items-center bg-white/5 px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer hover:bg-white/10 transition-all border border-white/5">
-                            <span class="text-white mr-3" id="calendar-month">April 2026</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-500"><path d="m6 9 6 6 6-6"/></svg>
-                        </div>
-                    </div>
-                    
-                    <div class="flex bg-black/30 rounded-2xl p-1.5 border border-white/5">
-                        <button class="p-2.5 text-slate-600 hover:text-white transition-all chart-toggle" data-type="chart">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
-                        </button>
-                        <button class="p-2.5 text-yellow-400 bg-white/10 rounded-xl shadow-md chart-toggle" data-type="calendar">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Weekday Headers -->
-                <div class="grid grid-cols-7 gap-4 text-center text-[11px] font-black text-slate-600 uppercase tracking-[0.2em] mb-4">
-                    <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
-                </div>
-
-                <!-- Calendar Grid -->
-                <div id="calendar-grid" class="grid grid-cols-7 gap-4">
-                    <!-- Calendar cells will be populated by JS -->
-                </div>
-            </section>
-
-            <!-- Active Signals Table -->
             <section class="glass rounded-[2.5rem] p-10">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-xl font-bold text-white">Signals Overview</h3>
                     <div class="flex items-center gap-3">
-                        <div class="text-sm text-slate-500" id="signals-count">—</div>
-                        <div class="flex items-center gap-1.5">
-                            <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                            <span class="text-xs text-slate-400">Active</span>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <div class="w-2 h-2 rounded-full bg-amber-500"></div>
-                            <span class="text-xs text-slate-400">Blocked</span>
-                        </div>
+                        <div class="text-sm text-slate-500" id="signals-count">-</div>
+                        <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-emerald-500"></div><span class="text-xs text-slate-400">Active</span></div>
+                        <div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-amber-500"></div><span class="text-xs text-slate-400">Blocked</span></div>
                     </div>
                 </div>
-                
                 <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead>
@@ -297,19 +163,62 @@
                                 <th class="text-left py-4 px-4">Status</th>
                             </tr>
                         </thead>
-                        <tbody id="signals-tbody">
-                            <!-- Signals will be populated by JS -->
-                        </tbody>
+                        <tbody id="signals-tbody"></tbody>
                     </table>
                 </div>
+                <!-- Pagination -->
+                <div id="signals-pagination" class="flex items-center justify-center gap-2 mt-6"></div>
             </section>
         </div>
 
-        <!-- Signal History Tab -->
+        <!-- History Tab -->
         <div id="tab-history" class="tab-content hidden">
+            <!-- Calendar -->
+            <section class="glass rounded-[2.5rem] p-10 mb-8">
+                <div class="flex justify-between items-center mb-8">
+                    <div class="flex items-center gap-5">
+                        <h3 class="text-xl font-bold text-white">Winrate Calendar</h3>
+                        <div class="relative">
+                            <button id="cal-nav-btn" class="glass flex items-center bg-white/5 px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer hover:bg-white/10 transition-all border border-white/5">
+                                <span class="text-white mr-3" id="calendar-month">-</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-500"><path d="m6 9 6 6 6-6"/></svg>
+                            </button>
+                            <div id="cal-dropdown" class="absolute top-full left-0 mt-2 glass rounded-xl p-4 z-50 hidden" style="min-width:200px;">
+                                <div class="flex items-center justify-between mb-3">
+                                    <button id="cal-prev" class="p-1 rounded hover:bg-white/10"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+                                    <span id="cal-year-label" class="text-white font-bold text-sm"></span>
+                                    <button id="cal-next" class="p-1 rounded hover:bg-white/10"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+                                </div>
+                                <div id="cal-months" class="grid grid-cols-3 gap-1"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-7 gap-4 text-center text-[11px] font-black text-slate-600 uppercase tracking-[0.2em] mb-4">
+                    <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                </div>
+                <div id="calendar-grid" class="grid grid-cols-7 gap-4"></div>
+            </section>
+
+            <!-- Daily Stats -->
+            <section id="daily-stats-section" class="glass rounded-[2.5rem] p-10 mb-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-white" id="daily-stats-title">Daily Performance (7D)</h3>
+                    <!-- Time Range -->
+                    <div class="flex gap-2">
+                        <button class="time-filter px-4 py-2 text-xs font-bold rounded-xl transition-all duration-300 bg-white/10 text-white shadow-lg" data-range="7">7D</button>
+                        <button class="time-filter px-4 py-2 text-xs font-bold rounded-xl transition-all duration-300 hover:bg-white/5 hover:text-white text-slate-400" data-range="30">1M</button>
+                        <button class="time-filter px-4 py-2 text-xs font-bold rounded-xl transition-all duration-300 hover:bg-white/5 hover:text-white text-slate-400" data-range="90">3M</button>
+                        <button class="time-filter px-4 py-2 text-xs font-bold rounded-xl transition-all duration-300 hover:bg-white/5 hover:text-white text-slate-400" data-range="all">ALL</button>
+                    </div>
+                </div>
+                <div id="daily-stats-grid" class="space-y-2"></div>
+            </section>
+
+            <!-- Closed Trades -->
             <section class="glass rounded-[2.5rem] p-10">
                 <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-bold text-white">Signal History</h3>
+                    <h3 class="text-xl font-bold text-white">Closed Trades</h3>
                     <div class="flex gap-2">
                         <button class="filter-btn glass px-4 py-2 rounded-xl text-xs font-bold active" data-filter="all">All</button>
                         <button class="filter-btn glass px-4 py-2 rounded-xl text-xs font-bold text-slate-400" data-filter="win">Wins</button>
@@ -317,20 +226,21 @@
                     </div>
                 </div>
                 <div id="history-container" class="space-y-3">
-                    <!-- History items populated by JS -->
+                    <div class="text-center text-slate-500 py-8">Loading...</div>
                 </div>
+                <!-- Pagination -->
+                <div id="history-pagination" class="flex items-center justify-center gap-2 mt-6"></div>
             </section>
         </div>
 
         <!-- Microstructure Tab -->
         <div id="tab-microstructure" class="tab-content hidden">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Liquidations Panel -->
                 <section class="glass rounded-[2.5rem] p-8">
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="text-lg font-bold text-white">Liquidations (15m)</h3>
                         <div class="flex items-center gap-2">
-                            <span class="text-xs text-slate-500" id="liq-updated">—</span>
+                            <span class="text-xs text-slate-500" id="liq-updated">-</span>
                             <button onclick="refreshLiquidations()" class="p-2 rounded-lg hover:bg-white/10 transition-colors" title="Refresh">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
                             </button>
@@ -340,8 +250,6 @@
                         <div class="text-center text-slate-500 py-8">Click refresh to load liquidation data</div>
                     </div>
                 </section>
-
-                <!-- Whale Activity Panel -->
                 <section class="glass rounded-[2.5rem] p-8">
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="text-lg font-bold text-white">Whale Activity</h3>
@@ -353,379 +261,312 @@
                 </section>
             </div>
         </div>
-
     </div>
 
     <script>
         // ============================================
-        // PERFORMANCE-OPTIMIZED DASHBOARD
+        // STATE
         // ============================================
-
-        // Global State with caching
         const state = {
             activeTab: 'overview',
-            timeRange: '7d',
-            statsExpanded: true,
+            timeRange: 7,
             scanData: null,
             dbStats: null,
-            historyData: null,
+            closedHistory: null,
+            dailyStats: null,
             calendarYear: new Date().getFullYear(),
             calendarMonth: new Date().getMonth() + 1,
-            // Cache for comparison
-            _cache: {
-                scanHash: null,
-                statsHash: null,
-                historyHash: null,
-                lastFetch: 0
-            },
-            // Loading states
-            _loading: {
-                scan: false,
-                stats: false,
-                history: false
-            },
-            // Lazy loading flags
-            _loaded: {
-                microstructure: false
-            }
+            selectedDate: null,
+            currentFilter: 'all',
+            timezone: localStorage.getItem('screener_timezone') || 'Jakarta',
+            timezoneOffset: parseFloat(localStorage.getItem('screener_offset')) || 7,
+            signalsPage: 1,
+            historyPage: 1,
+            itemsPerPage: 5,
+            _cache: { scanHash: null, statsHash: null, lastFetch: 0 },
+            _loaded: { microstructure: false }
         };
 
-        // Request deduplication registry
+        // Timezone definitions
+        const timezones = [
+            { name: 'Jakarta', offset: 7, label: 'GMT+7 (Jakarta)' },
+            { name: 'Singapore', offset: 8, label: 'GMT+8 (Singapore)' },
+            { name: 'Hong Kong', offset: 8, label: 'GMT+8 (Hong Kong)' },
+            { name: 'Tokyo', offset: 9, label: 'GMT+9 (Tokyo)' },
+            { name: 'Sydney', offset: 11, label: 'GMT+11 (Sydney)' },
+            { name: 'Dubai', offset: 4, label: 'GMT+4 (Dubai)' },
+            { name: 'Mumbai', offset: 5.5, label: 'GMT+5:30 (Mumbai)' },
+            { name: 'Berlin', offset: 1, label: 'GMT+1 (Berlin)' },
+            { name: 'Paris', offset: 1, label: 'GMT+1 (Paris)' },
+            { name: 'London', offset: 0, label: 'GMT+0 (London)' },
+            { name: 'UTC', offset: 0, label: 'UTC' },
+            { name: 'US Eastern', offset: -5, label: 'GMT-5 (New York)' },
+            { name: 'US Pacific', offset: -8, label: 'GMT-8 (Los Angeles)' },
+        ];
+
         const activeRequests = new Map();
 
-        // API Helper with timeout, deduplication, and graceful error handling
+        // ============================================
+        // HELPERS
+        // ============================================
         async function api(endpoint, timeout = 10000) {
-            // Cancel existing request for same endpoint
-            if (activeRequests.has(endpoint)) {
-                activeRequests.get(endpoint).abort();
-                activeRequests.delete(endpoint);
-            }
-
+            if (activeRequests.has(endpoint)) { activeRequests.get(endpoint).abort(); activeRequests.delete(endpoint); }
             const controller = new AbortController();
             activeRequests.set(endpoint, controller);
-
             try {
-                const timeoutId = setTimeout(() => controller.abort(), timeout);
+                const tid = setTimeout(() => controller.abort(), timeout);
                 const response = await fetch(endpoint, { signal: controller.signal });
-                clearTimeout(timeoutId);
+                clearTimeout(tid);
                 activeRequests.delete(endpoint);
-
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 return await response.json();
             } catch (e) {
                 activeRequests.delete(endpoint);
-                if (e.name === 'AbortError') {
-                    // Timeout — don't show error, return cached data indicator
-                    console.warn(`[Dashboard] API timeout: ${endpoint}`);
-                    return { ok: false, error: 'timeout' };
-                }
-                // Network error — server may be busy scanning, return gracefully
-                console.warn(`[Dashboard] API unavailable: ${endpoint} — ${e.message}`);
+                if (e.name === 'AbortError') return { ok: false, error: 'timeout' };
                 return { ok: false, error: 'network_error' };
             }
         }
 
-        // Fast hash for data comparison
-        function fastHash(obj) {
-            if (!obj) return '';
-            const str = JSON.stringify(obj);
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                const char = str.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash = hash & hash;
-            }
-            return hash.toString(16);
+        function fastHash(obj) { if (!obj) return ''; const s = JSON.stringify(obj); let h = 0; for (let i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h &= h; } return h.toString(16); }
+        const formatPercent = (v) => `${(v || 0).toFixed(1)}%`;
+        const formatNumber = (v) => (v || 0).toLocaleString();
+        const formatPrice = (p) => { if (!p || p === 0) return '-'; if (p >= 1000) return p.toFixed(2); if (p >= 1) return p.toFixed(4); return p.toFixed(6); };
+        function escapeHtml(t) { if (t === null || t === undefined) return ''; const d = document.createElement('div'); d.textContent = String(t); return d.innerHTML; }
+
+        // Format time with timezone offset
+        function formatTimeWithOffset(dateStr, offsetHours) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return '-';
+            const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+            const targetTime = new Date(utc + (offsetHours * 3600000));
+            return targetTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
         }
 
-        // Format Helpers
-        const formatPercent = (val) => `${(val || 0).toFixed(1)}%`;
-        const formatNumber = (val) => (val || 0).toLocaleString();
-
-        // XSS Protection - Escape HTML
-        function escapeHtml(text) {
-            if (text === null || text === undefined) return '';
-            const div = document.createElement('div');
-            div.textContent = String(text);
-            return div.innerHTML;
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const toast = document.getElementById('copy-toast');
+                toast.textContent = `Copied: ${text}`;
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 1500);
+            });
         }
 
         // ============================================
-        // PARALLEL DATA LOADING
+        // PAGINATION
+        // ============================================
+        function renderPagination(containerId, currentPage, totalPages, onPageChange) {
+            const container = document.getElementById(containerId);
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+            let html = '';
+            html += `<button class="pagination-btn text-slate-400" ${currentPage === 1 ? 'disabled' : ''} onclick="${onPageChange}(${currentPage - 1})">Prev</button>`;
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    html += `<button class="pagination-btn ${i === currentPage ? 'active' : 'text-slate-400'}" onclick="${onPageChange}(${i})">${i}</button>`;
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    html += `<span class="text-slate-600 px-1">...</span>`;
+                }
+            }
+            html += `<button class="pagination-btn text-slate-400" ${currentPage === totalPages ? 'disabled' : ''} onclick="${onPageChange}(${currentPage + 1})">Next</button>`;
+            container.innerHTML = html;
+        }
+
+        function goToSignalsPage(page) {
+            state.signalsPage = page;
+            if (state.scanData && state.scanData.data) {
+                updateSignalsTable(state.scanData.data);
+            }
+        }
+
+        function goToHistoryPage(page) {
+            state.historyPage = page;
+            if (state.closedHistory) {
+                updateHistory(state.closedHistory);
+            }
+        }
+
+        // ============================================
+        // DATA LOADING
         // ============================================
         async function loadDashboard() {
             const now = Date.now();
-            // Debounce: don't fetch more than once every 5 seconds
-            if (now - state._cache.lastFetch < 5000) {
-                console.log('[Dashboard] Skipping fetch (debounce)');
-                return;
-            }
+            if (now - state._cache.lastFetch < 5000) return;
             state._cache.lastFetch = now;
 
-            console.log('[Dashboard] Loading data in parallel...');
-            const startTime = performance.now();
-
-            // Fetch all APIs IN PARALLEL (not sequential!)
-            const [scan, dbStats, history, status] = await Promise.all([
+            const [scan, dbStats, status, learning] = await Promise.all([
                 api('/api/scan/latest'),
                 api('/api/db/stats'),
-                api('/api/signals/history?limit=50'), // Reduced from 100
-                api('/api/status')
+                api('/api/status'),
+                api('/api/learning')
             ]);
 
-            console.log(`[Dashboard] All APIs fetched in ${(performance.now() - startTime).toFixed(0)}ms`);
-
-            // Update scan data (with hash check)
             if (scan.ok) {
-                const scanHash = fastHash(scan.data);
-                if (scanHash !== state._cache.scanHash) {
-                    state._cache.scanHash = scanHash;
+                const h = fastHash(scan.data);
+                if (h !== state._cache.scanHash) {
+                    state._cache.scanHash = h;
                     state.scanData = scan;
                     updateSummaryCards(scan);
                     updateSignalsTable(scan.data);
-                } else {
-                    console.log('[Dashboard] Scan data unchanged, skipping render');
                 }
-            } else if (scan.error === 'timeout' || scan.error === 'network_error') {
-                // Server busy (likely scanning) -- don't show error, keep existing data
-                console.log('[Dashboard] API busy, keeping existing data');
             } else if (!state.scanData) {
-                // Only show error on first load
-                document.getElementById('signals-tbody').innerHTML = `
-                    <tr><td colspan="8" class="py-8 text-center text-slate-500">
-                        No scan data. <button onclick="forceRefresh()" class="text-amber-400 hover:underline">Run scan</button>
-                    </td></tr>
-                `;
+                document.getElementById('signals-tbody').innerHTML = '<tr><td colspan="8" class="py-8 text-center text-slate-500">No scan data. <button onclick="forceRefresh()" class="text-amber-400 hover:underline">Run scan</button></td></tr>';
             }
 
-            // Update DB stats
             if (dbStats.ok && dbStats.stats) {
-                const statsHash = fastHash(dbStats.stats);
-                if (statsHash !== state._cache.statsHash) {
-                    state._cache.statsHash = statsHash;
+                const h = fastHash(dbStats.stats);
+                if (h !== state._cache.statsHash) {
+                    state._cache.statsHash = h;
                     state.dbStats = dbStats.stats;
                     updateWinRateStats(dbStats.stats);
                 }
             }
 
-            // Update history (reduced limit for performance)
-            if (history.ok && history.data) {
-                const historyHash = fastHash(history.data.slice(0, 10));
-                if (historyHash !== state._cache.historyHash) {
-                    state._cache.historyHash = historyHash;
-                    state.historyData = history.data;
-                    updateCalendar(history.data);
-                    updateHistory(history.data);
-                }
-            } else if (history.error === 'timeout' || history.error === 'network_error') {
-                console.log('[Dashboard] History API busy, keeping existing data');
-            }
+            if (status.ok) updateStatus(status);
+            if (learning.ok && learning.beliefs) updateRegimeWR(learning.beliefs);
 
-            // Update status
-            if (status.ok) {
-                updateStatus(status);
+            if (state.activeTab === 'history') {
+                await loadHistoryData();
             }
-
-            console.log(`[Dashboard] Total load time: ${(performance.now() - startTime).toFixed(0)}ms`);
         }
 
-        // Force refresh / trigger scan
+        async function loadHistoryData() {
+            const days = state.timeRange === 'all' ? 9999 : state.timeRange;
+            const [closed, daily] = await Promise.all([
+                api(`/api/signals/history?limit=500&result=closed&days=${days}`),
+                api(`/api/daily-performance?days=${days}`)
+            ]);
+
+            if (closed.ok && closed.data) {
+                state.closedHistory = closed.data;
+                updateHistory(closed.data);
+            }
+
+            if (daily.ok && daily.data) {
+                state.dailyStats = daily.data;
+                updateCalendar(daily.data);
+                updateDailyStats(daily.data);
+            }
+        }
+
         async function forceRefresh() {
-            console.log('[Dashboard] Triggering scan...');
             const result = await api('/api/refresh');
-            console.log('[Dashboard] Refresh result:', result);
-            if (result.ok) {
-                setTimeout(loadDashboard, 2000); // Reload after 2s
-            }
+            if (result.ok) setTimeout(loadDashboard, 3000);
         }
 
-        // Update Summary Cards
+        // ============================================
+        // UPDATE UI
+        // ============================================
         function updateSummaryCards(scan) {
             const summary = scan.summary || {};
-            const micro = scan.microstructure_stats;
             const data = scan.data || [];
-            
-            document.getElementById('active-signals').textContent = 
-                (summary.long || 0) + (summary.short || 0);
-            
-            // V2 Blocks: show blocked count from microstructure_stats or summary
-            const blocked = summary.blocked_by_risk || 0;
-            if (micro) {
-                const totalBlocks = micro.blocked_by_liquidation + micro.blocked_by_divergence;
-                document.getElementById('v2-blocks').textContent = 
-                    totalBlocks > 0 ? totalBlocks : blocked;
-            } else if (blocked > 0) {
-                document.getElementById('v2-blocks').textContent = blocked;
-            }
-
-            // Also show total coins count
+            const activeCount = (summary.long || 0) + (summary.short || 0);
             const totalCoins = data.length || summary.total || 0;
-            document.getElementById('active-signals').textContent = 
-                `${(summary.long || 0) + (summary.short || 0)} active · ${totalCoins} coins`;
+            console.log('[Dashboard] Active signals:', activeCount, 'Total coins:', totalCoins);
+            document.getElementById('active-signals').textContent = `${activeCount} active · ${totalCoins} coins`;
         }
 
-        // Update Win Rate Stats
         function updateWinRateStats(stats) {
-            // Validate input
-            if (!stats || typeof stats !== 'object') {
-                console.warn('Invalid stats data received');
-                return;
-            }
-
+            if (!stats) return;
             const wins = Number(stats.wins) || 0;
             const losses = Number(stats.losses) || 0;
             const total = wins + losses;
             const wr = total > 0 ? (wins / total * 100) : 0;
-
             document.getElementById('overall-wr').textContent = formatPercent(wr);
-            document.getElementById('win-rate-stat').textContent = formatPercent(wr);
-            document.getElementById('total-wins').textContent = formatNumber(wins);
-            document.getElementById('total-losses').textContent = formatNumber(losses);
-            document.getElementById('open-positions').textContent = formatNumber(stats.open || stats.open_count || 0);
-            
-            // Regime WR - calculate from available data if possible
-            // For now, show "—" until regime-specific stats API is available
-            document.getElementById('bull-wr').textContent = '—%';
-            document.getElementById('bull-regime-wr').textContent = '—%';
-            document.getElementById('sideways-regime-wr').textContent = '—%';
+        }
 
-            // Signal stats - OPTIMIZED: single pass instead of 4 filters
-            if (state.historyData && state.historyData.length > 0) {
-                let longTotal = 0, longWins = 0, shortTotal = 0, shortWins = 0;
-
-                for (const h of state.historyData) {
-                    if (h.result === 'WIN' || h.result === 'LOSS') {
-                        if (h.signal === 'LONG') {
-                            longTotal++;
-                            if (h.result === 'WIN') longWins++;
-                        } else if (h.signal === 'SHORT') {
-                            shortTotal++;
-                            if (h.result === 'WIN') shortWins++;
-                        }
-                    }
-                }
-
-                document.getElementById('long-wr').textContent = longTotal > 0 ? formatPercent(longWins / longTotal * 100) : '—%';
-                document.getElementById('short-wr').textContent = shortTotal > 0 ? formatPercent(shortWins / shortTotal * 100) : '—%';
-            } else {
-                document.getElementById('long-wr').textContent = '—%';
-                document.getElementById('short-wr').textContent = '—%';
+        function updateRegimeWR(beliefs) {
+            if (!beliefs) return;
+            const bl = beliefs['BULL+LONG'];
+            const bs = beliefs['BULL+SHORT'];
+            if (bl && bs) {
+                const avg = (bl.wr_estimate * bl.total_trades + bs.wr_estimate * bs.total_trades) / (bl.total_trades + bs.total_trades);
+                document.getElementById('bull-wr').textContent = formatPercent(avg);
+            } else if (bl) {
+                document.getElementById('bull-wr').textContent = formatPercent(bl.wr_estimate);
             }
         }
 
-        // Update Status
         function updateStatus(status) {
-            document.getElementById('last-scan').textContent = 
-                status.last_scan ? new Date(status.last_scan).toLocaleTimeString() : '—';
-            document.getElementById('next-scan').textContent = 
-                status.next_scan ? new Date(status.next_scan).toLocaleTimeString() : '—';
-            
-            // Session indicator
+            document.getElementById('last-scan').textContent = formatTimeWithOffset(status.last_scan, state.timezoneOffset);
+            document.getElementById('next-scan').textContent = formatTimeWithOffset(status.next_scan, state.timezoneOffset);
+
+            // Session based on UTC
             const utcHour = new Date().getUTCHours();
-            let sessionName, sessionColor;
-            if (utcHour >= 13 && utcHour < 16) {
-                sessionName = 'LONDON/NY';
-                sessionColor = '#fbbf24';
-            } else if (utcHour >= 8 && utcHour < 16) {
-                sessionName = 'LONDON';
-                sessionColor = '#10b981';
-            } else if (utcHour >= 13 || utcHour < 22) {
-                sessionName = 'NEW YORK';
-                sessionColor = '#3b82f6';
-            } else if (utcHour >= 0 && utcHour < 8) {
-                sessionName = 'ASIA';
-                sessionColor = '#8b5cf6';
-            } else {
-                sessionName = 'OFF-HOURS';
-                sessionColor = '#64748b';
+            let sn, sc, hours;
+            if (utcHour >= 13 && utcHour < 16) { 
+                sn = 'LONDON/NY'; sc = '#fbbf24'; 
+                hours = formatSessionHours(13, 16, state.timezoneOffset);
             }
-            const sessionEl = document.getElementById('current-session');
-            if (sessionEl) {
-                sessionEl.textContent = sessionName;
-                sessionEl.style.color = sessionColor;
+            else if (utcHour >= 8 && utcHour < 13) { 
+                sn = 'LONDON'; sc = '#10b981'; 
+                hours = formatSessionHours(8, 16, state.timezoneOffset);
             }
-            
-            // Date range
-            const today = new Date();
-            const start = new Date(today);
-            start.setDate(start.getDate() - 7);
-            document.getElementById('date-range-start').textContent = start.toISOString().split('T')[0];
-            document.getElementById('date-range-end').textContent = today.toISOString().split('T')[0];
+            else if (utcHour >= 16 && utcHour < 22) { 
+                sn = 'NEW YORK'; sc = '#3b82f6'; 
+                hours = formatSessionHours(16, 22, state.timezoneOffset);
+            }
+            else if (utcHour >= 0 && utcHour < 8) { 
+                sn = 'ASIA'; sc = '#8b5cf6'; 
+                hours = formatSessionHours(0, 8, state.timezoneOffset);
+            }
+            else { 
+                sn = 'OFF-HOURS'; sc = '#64748b'; 
+                hours = 'Variable';
+            }
+
+            const el = document.getElementById('current-session');
+            if (el) {
+                el.textContent = sn;
+                el.style.color = sc;
+            }
+            document.getElementById('session-hours').textContent = hours;
         }
 
-// DOM Cache for signals table
-        const signalsCache = {
-            hash: null,
-            html: null,
-            count: 0
-        };
+        function formatSessionHours(utcStart, utcEnd, offset) {
+            const start = ((utcStart + offset) % 24 + 24) % 24;
+            const end = ((utcEnd + offset) % 24 + 24) % 24;
+            return `${formatHour12(start)} - ${formatHour12(end)}`;
+        }
 
-        // Update Signals Table - Shows active + blocked signals
+        function formatHour12(hour24) {
+            const period = hour24 >= 12 ? 'PM' : 'AM';
+            const hour12 = hour24 % 12 || 12;
+            return `${hour12} ${period}`;
+        }
+
         function updateSignalsTable(signals) {
-            // Validate input
             if (!Array.isArray(signals)) {
-                console.warn('Invalid signals data received');
-                document.getElementById('signals-tbody').innerHTML = `
-                    <tr><td colspan="8" class="py-8 text-center text-slate-500">Error loading signals</td></tr>
-                `;
+                document.getElementById('signals-tbody').innerHTML = '<tr><td colspan="8" class="py-8 text-center text-slate-500">Error loading signals</td></tr>';
                 return;
             }
-
-            // Separate active (LONG/SHORT) and blocked signals
-            const active = [];
-            const blocked = [];
+            const active = [], blocked = [];
             for (const s of signals) {
-                if (s.signal === 'LONG' || s.signal === 'SHORT') {
-                    active.push(s);
-                } else if (s.risk_blocked) {
-                    blocked.push(s);
-                }
+                if (s.signal === 'LONG' || s.signal === 'SHORT') active.push(s);
+                else if (s.risk_blocked) blocked.push(s);
             }
-
-            // Show active first, then top blocked by score
-            const displaySignals = [...active, ...blocked.sort((a, b) => (b.score || 0) - (a.score || 0)).slice(0, 10)].slice(0, 15);
-
+            const allSignals = [...active, ...blocked.sort((a, b) => (b.score || 0) - (a.score || 0))];
+            
+            // Pagination
+            const totalPages = Math.ceil(allSignals.length / state.itemsPerPage);
+            const start = (state.signalsPage - 1) * state.itemsPerPage;
+            const display = allSignals.slice(start, start + state.itemsPerPage);
+            
             document.getElementById('signals-count').textContent = `${active.length} active · ${blocked.length} blocked`;
+            renderPagination('signals-pagination', state.signalsPage, totalPages, 'goToSignalsPage');
 
-            if (displaySignals.length === 0) {
-                const emptyHtml = `<tr><td colspan="8" class="py-8 text-center text-slate-500">No scan data available. <button onclick="forceRefresh()" class="text-amber-400 hover:underline">Run scan</button></td></tr>`;
-                if (signalsCache.html !== emptyHtml) {
-                    signalsCache.html = emptyHtml;
-                    document.getElementById('signals-tbody').innerHTML = emptyHtml;
-                }
+            if (display.length === 0) {
+                document.getElementById('signals-tbody').innerHTML = '<tr><td colspan="8" class="py-8 text-center text-slate-500">No scan data. <button onclick="forceRefresh()" class="text-amber-400 hover:underline">Run scan</button></td></tr>';
                 return;
             }
 
-            // Generate hash for comparison (only check essential fields)
-            const currentHash = fastHash(displaySignals.map(s => ({
-                sym: s.symbol,
-                sig: s.signal,
-                p: s.price,
-                c: s.confidence,
-                r: s.risk_score,
-                rb: s.risk_blocked
-            })));
-
-            // Skip render if data unchanged
-            if (currentHash === signalsCache.hash) {
-                console.log('[Dashboard] Signals unchanged, skipping render');
-                return;
-            }
-
-            // Format price helper
-            const formatPrice = (p) => {
-                if (!p || p === 0) return '—';
-                if (p >= 1000) return p.toFixed(2);
-                if (p >= 1) return p.toFixed(4);
-                return p.toFixed(6);
-            };
-
-            // Build HTML
             let html = '';
-            for (const s of displaySignals) {
+            for (const s of display) {
                 const isActive = s.signal === 'LONG' || s.signal === 'SHORT';
                 const isBlocked = s.risk_blocked;
-                const signalColor = s.signal === 'LONG' ? 'win-positive' : s.signal === 'SHORT' ? 'win-negative' : 'text-slate-500';
+                const sigColor = s.signal === 'LONG' ? 'win-positive' : s.signal === 'SHORT' ? 'win-negative' : 'text-slate-500';
                 const regime = s.regime?.regime || s.regime || 'SIDEWAYS';
                 const risk = s.risk_score || 0;
                 const price = s.price || s.entry_price || 0;
@@ -733,620 +574,389 @@
                 const sl = s.sl || 0;
                 const tp = s.tp || 0;
 
-                let statusBadge = '';
+                let badge = '';
                 if (isBlocked) {
-                    const reason = s.risk_reason || '';
-                    const shortReason = reason.length > 30 ? reason.substring(0, 30) + '…' : reason;
-                    statusBadge = `<td class="py-4 px-4"><span class="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-1 rounded font-semibold">BLOCKED</span><div class="text-[9px] text-slate-500 mt-1 max-w-[120px] truncate" title="${escapeHtml(reason)}">${escapeHtml(shortReason)}</div></td>`;
+                    const r = s.risk_reason || '';
+                    badge = `<td class="py-4 px-4"><span class="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-1 rounded font-semibold">BLOCKED</span><div class="text-[9px] text-slate-500 mt-1 max-w-[120px] truncate">${escapeHtml(r.substring(0, 30))}</div></td>`;
                 } else if (isActive) {
-                    statusBadge = `<td class="py-4 px-4"><span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded font-semibold">ACTIVE</span></td>`;
+                    badge = `<td class="py-4 px-4"><span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded font-semibold">ACTIVE</span></td>`;
                 } else {
-                    statusBadge = `<td class="py-4 px-4"><span class="text-[10px] bg-slate-500/20 text-slate-400 px-2 py-1 rounded font-semibold">WAIT</span></td>`;
+                    badge = `<td class="py-4 px-4"><span class="text-[10px] bg-slate-500/20 text-slate-400 px-2 py-1 rounded font-semibold">WAIT</span></td>`;
                 }
 
-                const rowOpacity = isBlocked ? 'opacity-70' : '';
+                const prHtml = s.position_reduction && s.position_reduction < 1 ? `<div class="text-[9px] text-amber-400 mt-1">${Math.round(s.position_reduction * 100)}% size</div>` : '';
 
-                <html += `<tr class="border-b border-white/5 hover:bg-white/[0.02] transition-colors ${rowOpacity}">
-                    <td class="py-4 px-4"><span class="text-white font-bold text-sm">${escapeHtml(s.symbol || '—')}</span></td>
-                    <td class="py-4 px-4"><span class="${signalColor} font-bold">${escapeHtml(s.signal)}</span></td>
+                html += `<tr class="border-b border-white/5 hover:bg-white/[0.02] transition-colors ${isBlocked ? 'opacity-70' : ''}">
+                    <td class="py-4 px-4"><span class="text-white font-bold text-sm cursor-pointer hover:text-amber-400 transition-colors" onclick="copyToClipboard('${escapeHtml(s.symbol || '')}')" title="Click to copy">${escapeHtml(s.symbol || '-')}</span></td>
+                    <td class="py-4 px-4"><span class="${sigColor} font-bold">${escapeHtml(s.signal)}</span></td>
                     <td class="py-4 px-4 text-slate-300 text-sm">$${formatPrice(price)}</td>
                     <td class="py-4 px-4 text-white">${escapeHtml(s.confidence || 0)}%</td>
                     <td class="py-4 px-4 text-slate-400 text-xs">${escapeHtml(regime)}${s.session ? '<br><span class="text-[9px] text-slate-600">' + escapeHtml(s.session) + '</span>' : ''}</td>
-                    <td class="py-4 px-4">
-                        <div class="flex items-center gap-2">
-                            <div class="w-12 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                                <div class="h-full ${risk > 70 ? 'bg-emerald-500' : risk > 40 ? 'bg-yellow-500' : 'bg-rose-500'}" style="width: ${Math.min(risk, 100)}%"></div>
-                            </div>
-                            <span class="text-[10px] text-slate-500">${risk}</span>
-                        </div>
-                        ${s.position_reduction && s.position_reduction < 1 ? '<div class="text-[9px] text-amber-400 mt-1">' + Math.round(s.position_reduction * 100) + '% size</div>' : ''}
-                    </td>
-                    <td class="py-4 px-4 text-[10px] text-slate-400">
-                        <div class="flex flex-col gap-0.5">
-                            <span class="${entry && entry !== price ? 'text-emerald-400' : 'text-slate-500'}">E: $${formatPrice(entry)}</span>
-                            <span class="${sl ? 'text-rose-400' : 'text-slate-600'}">S: $${formatPrice(sl)}</span>
-                            <span class="${tp ? 'text-blue-400' : 'text-slate-600'}">T: $${formatPrice(tp)}</span>
-                        </div>
-                    </td>
-                    ${statusBadge}
-                </tr>`;
+                    <td class="py-4 px-4"><div class="flex items-center gap-2"><div class="w-12 h-1.5 bg-white/10 rounded-full overflow-hidden"><div class="h-full ${risk > 70 ? 'bg-emerald-500' : risk > 40 ? 'bg-yellow-500' : 'bg-rose-500'}" style="width: ${Math.min(risk, 100)}%"></div></div><span class="text-[10px] text-slate-500">${risk}</span></div>${prHtml}</td>
+                    <td class="py-4 px-4 text-[10px] text-slate-400"><div class="flex flex-col gap-0.5">
+                        <span class="cursor-pointer hover:text-emerald-300 transition-colors" onclick="copyToClipboard('$${formatPrice(entry)}')">E: $${formatPrice(entry)}</span>
+                        <span class="${sl ? 'text-rose-400 cursor-pointer hover:text-rose-300 transition-colors' : 'text-slate-600'}" ${sl ? `onclick="copyToClipboard('$${formatPrice(sl)}')"` : ''}>S: $${formatPrice(sl)}</span>
+                        <span class="${tp ? 'text-blue-400 cursor-pointer hover:text-blue-300 transition-colors' : 'text-slate-600'}" ${tp ? `onclick="copyToClipboard('$${formatPrice(tp)}')"` : ''}>T: $${formatPrice(tp)}</span>
+                    </div></td>
+                    ${badge}</tr>`;
             }
-
-            // Update cache and DOM
-            signalsCache.hash = currentHash;
-            signalsCache.html = html;
-            signalsCache.count = displaySignals.length;
             document.getElementById('signals-tbody').innerHTML = html;
         }
 
-        // Calendar cache
-        const calendarCache = {
-            hash: null,
-            month: null,
-            year: null
-        };
-
-        // Update Calendar - OPTIMIZED
-        function updateCalendar(historyData) {
-            // Validate input
-            if (!Array.isArray(historyData)) {
-                console.warn('Invalid calendar data received');
-                return;
-            }
-
+        // ============================================
+        // CALENDAR with Hover
+        // ============================================
+        function updateCalendar(dailyData) {
             const year = state.calendarYear;
             const month = state.calendarMonth;
-
-            // Skip if month/year unchanged and we have cached HTML
-            if (year === calendarCache.year && month === calendarCache.month && calendarCache.hash) {
-                // Still need to check if history data changed for this month
-                const currentHash = fastHash(historyData.slice(0, 20)); // Check first 20 only
-                if (currentHash === calendarCache.hash) {
-                    console.log('[Dashboard] Calendar unchanged, skipping render');
-                    return;
-                }
-                calendarCache.hash = currentHash;
-            } else {
-                calendarCache.year = year;
-                calendarCache.month = month;
-                calendarCache.hash = fastHash(historyData.slice(0, 20));
-            }
-
             const grid = document.getElementById('calendar-grid');
 
-            // Get first day and days in month
             const firstDay = new Date(year, month - 1, 1).getDay();
             const daysInMonth = new Date(year, month, 0).getDate();
-
-            // Group history by date - only process relevant dates
             const monthPrefix = `${year}-${String(month).padStart(2, '0')}`;
+
+            // Create date map from daily stats data
             const dateMap = {};
-            for (const item of historyData) {
-                const date = item.timestamp ? item.timestamp.split('T')[0] : null;
-                if (date && date.startsWith(monthPrefix)) {
-                    if (!dateMap[date]) dateMap[date] = { wins: 0, losses: 0, total: 0 };
-                    dateMap[date].total++;
-                    if (item.result === 'WIN') dateMap[date].wins++;
-                    else if (item.result === 'LOSS') dateMap[date].losses++;
+            for (const item of dailyData) {
+                const d = item.scan_date;
+                if (d && d.substring(0, 7) === monthPrefix) {
+                    const total = (item.wins || 0) + (item.losses || 0);
+                    dateMap[d] = {
+                        wins: item.wins || 0,
+                        losses: item.losses || 0,
+                        total: total,
+                        wr: item.win_rate || 0
+                    };
                 }
             }
 
-            // Build calendar
             let html = '';
+            for (let i = 0; i < firstDay; i++) html += '<div class="calendar-day"></div>';
 
-            // Empty cells before month starts
-            for (let i = 0; i < firstDay; i++) {
-                html += '<div class="calendar-day"></div>';
-            }
-
-            // Days
             for (let day = 1; day <= daysInMonth; day++) {
-                const dateStr = `${monthPrefix}-${String(day).padStart(2, '0')}`;
-                const data = dateMap[dateStr];
-
-                let wr = null;
-                let bgClass = 'bg-white/[0.02] border border-white/5';
-                let textClass = 'text-slate-600';
-
+                const ds = `${monthPrefix}-${String(day).padStart(2, '0')}`;
+                const data = dateMap[ds];
+                let wr = null, bg = 'bg-white/[0.02] border border-white/5', tc = 'text-slate-600';
+                let tooltip = '';
+                
                 if (data && data.total > 0) {
-                    wr = (data.wins / data.total * 100).toFixed(1);
-                    const wrNum = parseFloat(wr);
-                    if (wrNum >= 60) {
-                        bgClass = 'bg-emerald-500/[0.08] border border-emerald-500/20';
-                        textClass = 'text-emerald-400';
-                    } else if (wrNum >= 40) {
-                        bgClass = 'bg-yellow-500/[0.08] border border-yellow-500/20';
-                        textClass = 'text-yellow-400';
-                    } else {
-                        bgClass = 'bg-rose-500/[0.08] border border-rose-500/20';
-                        textClass = 'text-rose-500';
-                    }
-                }
-
-                html += `<div class="calendar-day rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all duration-300 hover:scale-105 ${bgClass}"><span class="text-[10px] absolute top-2 right-3 font-bold opacity-30 text-slate-500">${day}</span>${wr !== null ? `<span class="text-[14px] font-bold ${textClass}">${wr}%</span>` : ''}</div>`;
-            }
-
-            grid.innerHTML = html;
-            document.getElementById('calendar-month').textContent =
-                new Date(year, month - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-        }
-
-        // History cache
-        const historyCache = {
-            hash: null,
-            html: null
-        };
-
-        // Update History - OPTIMIZED
-        function updateHistory(historyData) {
-            // Validate input
-            if (!Array.isArray(historyData)) {
-                console.warn('Invalid history data received');
-                document.getElementById('history-container').innerHTML = `<div class="text-center text-slate-500 py-8">Error loading history</div>`;
-                return;
-            }
-
-            // Generate hash from first 20 items (sufficient for comparison)
-            const itemsToHash = historyData.slice(0, 20).map(h => ({
-                id: h.id,
-                r: h.result,
-                pnl: h.pnl_pct
-            }));
-            const currentHash = fastHash(itemsToHash);
-
-            // Skip if unchanged
-            if (currentHash === historyCache.hash) {
-                console.log('[Dashboard] History unchanged, skipping render');
-                return;
-            }
-
-            const container = document.getElementById('history-container');
-
-            // Single pass: collect closed and count open
-            const closed = [];
-            let openCount = 0;
-            for (const h of historyData) {
-                if (h.result === 'WIN' || h.result === 'LOSS') {
-                    if (closed.length < 20) closed.push(h);
-                } else if (h.result === 'OPEN' || h.result === 'PENDING') {
-                    openCount++;
-                }
-            }
-
-            if (closed.length === 0) {
-                const emptyHtml = `<div class="text-center text-slate-500 py-8">No closed trades yet. Signals will be tracked here once they hit SL/TP.</div>`;
-                historyCache.hash = currentHash;
-                historyCache.html = emptyHtml;
-                container.innerHTML = emptyHtml;
-                document.getElementById('blocked-signals').textContent = openCount;
-                return;
-            }
-
-            // Build HTML
-            let html = '';
-            for (const h of closed) {
-                const isWin = h.result === 'WIN';
-                const colorClass = isWin ? 'win-positive' : 'win-negative';
-                const pnl = h.pnl_pct || 0;
-                const date = h.timestamp ? h.timestamp.split('T')[0] : '—';
-                const symbol = h.symbol || '—';
-                const signalColor = h.signal === 'LONG' ? 'text-emerald-400' : 'text-rose-400';
-
-                html += `<div class="glass p-4 rounded-2xl flex items-center justify-between hover:bg-white/[0.05] transition-colors"><div class="flex items-center gap-4"><div class="w-10 h-10 rounded-xl ${isWin ? 'bg-emerald-500/20' : 'bg-rose-500/20'} flex items-center justify-center"><span class="text-lg">${isWin ? '✅' : '❌'}</span></div><div><div class="text-white font-semibold text-sm"><span class="text-amber-400">${escapeHtml(symbol)}</span><span class="mx-1">•</span><span class="${signalColor}">${escapeHtml(h.signal)}</span></div><div class="text-xs text-slate-500">${escapeHtml(date)} • ${escapeHtml(h.regime || 'SIDEWAYS')}</div></div></div><div class="text-right"><div class="${colorClass} font-bold">${isWin ? '+' : ''}${pnl.toFixed(1)}%</div><div class="text-xs text-slate-500">${h.confidence || 0}% conf</div></div></div>`;
-            }
-
-            // Update cache and DOM
-            historyCache.hash = currentHash;
-            historyCache.html = html;
-            container.innerHTML = html;
-            document.getElementById('blocked-signals').textContent = openCount;
-        }
-
-        // Smart Polling Manager
-        const pollManager = {
-            interval: null,
-            baseInterval: 60000, // Start with 60s (not 30s)
-            maxInterval: 300000, // Max 5 minutes
-            currentInterval: 60000,
-            consecutiveErrors: 0,
-
-            start() {
-                this.stop();
-                this.tick();
-                this.interval = setInterval(() => this.tick(), this.currentInterval);
-                console.log(`[Dashboard] Polling started: ${this.currentInterval / 1000}s interval`);
-            },
-
-            stop() {
-                if (this.interval) {
-                    clearInterval(this.interval);
-                    this.interval = null;
-                }
-            },
-
-            async tick() {
-                // Don't poll if tab is hidden (save resources)
-                if (document.hidden) {
-                    console.log('[Dashboard] Tab hidden, skipping poll');
-                    return;
-                }
-
-                try {
-                    await loadDashboard();
-                    this.consecutiveErrors = 0;
-                    // Gradually increase interval up to max
-                    this.currentInterval = Math.min(this.currentInterval * 1.1, this.maxInterval);
-                } catch (e) {
-                    this.consecutiveErrors++;
-                    // Exponential backoff on error
-                    this.currentInterval = Math.min(
-                        this.baseInterval * Math.pow(2, this.consecutiveErrors),
-                        this.maxInterval
-                    );
-                    console.log(`[Dashboard] Error #${this.consecutiveErrors}, backoff: ${this.currentInterval / 1000}s`);
-                }
-
-                // Reset interval with new timing
-                this.stop();
-                this.interval = setInterval(() => this.tick(), this.currentInterval);
-            },
-
-            // Reset to fast polling temporarily (e.g., after user action)
-            reset() {
-                this.currentInterval = this.baseInterval;
-                this.consecutiveErrors = 0;
-                this.stop();
-                this.tick();
-                this.interval = setInterval(() => this.tick(), this.currentInterval);
-            }
-        };
-
-        // Event Listeners
-        document.addEventListener('DOMContentLoaded', () => {
-            // Initial load
-            loadDashboard();
-
-            // Smart polling (not aggressive setInterval!)
-            pollManager.start();
-
-            // Pause polling when tab not visible
-            document.addEventListener('visibilitychange', () => {
-                if (document.hidden) {
-                    console.log('[Dashboard] Tab hidden, pausing polls');
-                    pollManager.stop();
+                    wr = data.wr.toFixed(1);
+                    const wn = parseFloat(wr);
+                    if (wn >= 60) { bg = 'bg-emerald-500/[0.08] border border-emerald-500/20'; tc = 'text-emerald-400'; }
+                    else if (wn >= 40) { bg = 'bg-yellow-500/[0.08] border border-yellow-500/20'; tc = 'text-yellow-400'; }
+                    else { bg = 'bg-rose-500/[0.08] border border-rose-500/20'; tc = 'text-rose-500'; }
+                    
+                    tooltip = `<div class="calendar-tooltip">
+                        <div class="text-white font-bold mb-1">${ds}</div>
+                        <div class="text-emerald-400">Wins: ${data.wins}</div>
+                        <div class="text-rose-400">Losses: ${data.losses}</div>
+                        <div class="text-amber-400">Total: ${data.total}</div>
+                        <div class="text-blue-400 mt-1">WR: ${wr}%</div>
+                    </div>`;
                 } else {
-                    console.log('[Dashboard] Tab visible, resuming polls');
-                    loadDashboard(); // Immediate refresh
-                    pollManager.start();
+                    tooltip = `<div class="calendar-tooltip"><div class="text-slate-400">${ds}</div><div class="text-slate-500">No trades</div></div>`;
                 }
-            });
+                
+                // Click handler dengan toggle (klik lagi = clear)
+                const clickHandler = data && data.total > 0 ? `onclick="toggleHistoryByDate('${ds}')"` : '';
+                const selectedClass = state.selectedDate === ds ? 'ring-2 ring-amber-400' : '';
+                html += `<div class="calendar-day rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all duration-300 hover:scale-105 ${bg} ${selectedClass}" ${clickHandler}>${tooltip}<span class="text-[10px] font-bold text-white mb-1">${day}</span>${wr !== null ? `<span class="text-[14px] font-bold ${tc}">${wr}%</span>` : ''}</div>`;
+            }
+            grid.innerHTML = html;
+            document.getElementById('calendar-month').textContent = new Date(year, month - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        }
 
-            // Refresh button
-            document.getElementById('refresh-btn').addEventListener('click', () => {
-                pollManager.reset();
-                forceRefresh();
-            });
-            
-            // Stats toggle
-            const toggleBtn = document.getElementById('toggle-stats');
-            const statsRight = document.getElementById('stats-right');
-            const toggleText = document.getElementById('toggle-text');
-            const toggleIcon = document.getElementById('toggle-icon');
-            
-            toggleBtn.addEventListener('click', () => {
-                state.statsExpanded = !state.statsExpanded;
-                statsRight.style.display = state.statsExpanded ? 'block' : 'none';
-                toggleText.textContent = state.statsExpanded ? 'Show Less' : 'Show More';
-                toggleIcon.classList.toggle('rotated', !state.statsExpanded);
-            });
-            
-            // Time filter buttons
-            document.querySelectorAll('.time-filter').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    document.querySelectorAll('.time-filter').forEach(b => {
-                        b.classList.remove('bg-white/10', 'text-white', 'shadow-lg');
-                        b.classList.add('text-slate-400');
-                    });
-                    e.target.classList.add('bg-white/10', 'text-white', 'shadow-lg');
-                    e.target.classList.remove('text-slate-400');
-                    state.timeRange = e.target.dataset.range;
+        function toggleHistoryByDate(dateStr) {
+            // Toggle: klik lagi di tanggal yang sama = clear filter
+            if (state.selectedDate === dateStr) {
+                state.selectedDate = null;
+            } else {
+                state.selectedDate = dateStr;
+            }
+            state.historyPage = 1;
+            // Reload calendar untuk update selected highlight
+            if (state.dailyStats) {
+                updateCalendar(state.dailyStats);
+            }
+            applyHistoryFilter();
+        }
+
+        // ============================================
+        // DAILY STATS & HISTORY
+        // ============================================
+        function updateDailyStats(data) {
+            if (!data || data.length === 0) {
+                document.getElementById('daily-stats-grid').innerHTML = '<div class="text-center text-slate-500 py-4">No data for this period</div>';
+                return;
+            }
+            const rangeLabel = state.timeRange === 7 ? '7D' : state.timeRange === 30 ? '1M' : state.timeRange === 90 ? '3M' : 'ALL';
+            document.getElementById('daily-stats-title').textContent = `Daily Performance (${rangeLabel})`;
+            let html = '<div class="grid grid-cols-7 gap-2 text-[10px] font-black text-slate-600 uppercase tracking-wider mb-2 py-2 border-b border-white/5">' +
+                '<div>Date</div><div class="text-right">WR</div><div class="text-right">W/L</div><div class="text-right">Avg SL</div><div class="text-right">Avg TP</div><div class="text-right">Longs</div><div class="text-right">Shorts</div></div>';
+            for (const d of data.slice(0, 30)) {
+                const wr = d.win_rate || 0;
+                const wrClass = wr >= 60 ? 'text-emerald-400' : wr >= 40 ? 'text-yellow-400' : 'text-rose-400';
+                const dateStr = d.scan_date ? d.scan_date.substring(5) : '-';
+                const wins = d.wins || 0;
+                const losses = d.losses || 0;
+                html += `<div class="grid grid-cols-7 gap-2 text-[11px] py-2 border-b border-white/5 hover:bg-white/[0.02]">
+                    <span class="text-slate-400">${escapeHtml(dateStr)}</span>
+                    <span class="text-right ${wrClass} font-bold">${wr.toFixed(1)}%</span>
+                    <span class="text-right text-slate-300">${wins}/${losses}</span>
+                    <span class="text-right text-rose-400">${d.avg_sl_pct != null ? d.avg_sl_pct + '%' : '-'}</span>
+                    <span class="text-right text-blue-400">${d.avg_tp_pct != null ? d.avg_tp_pct + '%' : '-'}</span>
+                    <span class="text-right text-emerald-400">${d.longs || 0}</span>
+                    <span class="text-right text-rose-300">${d.shorts || 0}</span>
+                </div>`;
+            }
+            document.getElementById('daily-stats-grid').innerHTML = html;
+        }
+
+        function applyHistoryFilter() {
+            if (!state.closedHistory) return;
+
+            // Start with all data
+            let displayData = state.closedHistory;
+
+            // Filter by date if selected
+            if (state.selectedDate) {
+                displayData = displayData.filter(h => {
+                    const d = h.scan_date || (h.timestamp ? h.timestamp.split('T')[0] : null);
+                    return d === state.selectedDate;
                 });
-            });
+            }
+
+            // Filter by win/loss
+            if (state.currentFilter === 'win') {
+                displayData = displayData.filter(h => h.result === 'WIN');
+            } else if (state.currentFilter === 'loss') {
+                displayData = displayData.filter(h => h.result === 'LOSS');
+            }
+
+            // Pagination
+            const totalPages = Math.ceil(displayData.length / state.itemsPerPage);
+            const start = (state.historyPage - 1) * state.itemsPerPage;
+            const pageData = displayData.slice(start, start + state.itemsPerPage);
+
+            renderPagination('history-pagination', state.historyPage, totalPages, 'goToHistoryPage');
+            renderHistoryItems(pageData);
+        }
+
+        function updateHistory(closedData) {
+            if (!closedData || closedData.length === 0) {
+                document.getElementById('history-container').innerHTML = '<div class="text-center text-slate-500 py-8">No closed trades for this period.</div>';
+                document.getElementById('history-pagination').innerHTML = '';
+                return;
+            }
+
+            state.closedHistory = closedData;
+            applyHistoryFilter();
+        }
+
+        function renderHistoryItems(items) {
+            const container = document.getElementById('history-container');
+            if (items.length === 0) {
+                container.innerHTML = '<div class="text-center text-slate-500 py-8">No trades found</div>';
+                return;
+            }
+            container.innerHTML = items.map(h => {
+                const isWin = h.result === 'WIN';
+                const cc = isWin ? 'win-positive' : 'win-negative';
+                const pnl = h.pnl_pct || 0;
+                const date = h.timestamp ? h.timestamp.split('T')[0] : (h.scan_date || '-');
+                const sc = h.signal === 'LONG' ? 'text-emerald-400' : 'text-rose-400';
+                return `<div class="glass p-4 rounded-2xl flex items-center justify-between hover:bg-white/[0.05] transition-colors">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl ${isWin ? 'bg-emerald-500/20' : 'bg-rose-500/20'} flex items-center justify-center"><span class="text-lg">${isWin ? '✅' : '❌'}</span></div>
+                        <div><div class="text-white font-semibold text-sm"><span class="text-amber-400">${escapeHtml(h.symbol)}</span><span class="mx-1">•</span><span class="${sc}">${escapeHtml(h.signal)}</span></div><div class="text-xs text-slate-500">${escapeHtml(date)} · ${escapeHtml(h.regime || 'SIDEWAYS')}</div></div>
+                    </div>
+                    <div class="text-right"><div class="${cc} font-bold">${isWin ? '+' : ''}${pnl.toFixed(1)}%</div><div class="text-xs text-slate-500">${h.confidence || 0}% conf</div></div>
+                </div>`;
+            }).join('');
+        }
+
+        // ============================================
+        // MICROSTRUCTURE & EVENTS
+        // ============================================
+        async function loadMicrostructureData(force = false) {
+            if (state._loaded.microstructure && !force) return;
+            state._loaded.microstructure = true;
+            const liqRes = await api('/api/liquidations');
+            if (liqRes.ok) updateLiquidations(liqRes);
+            else document.getElementById('liquidations-container').innerHTML = '<div class="text-center text-slate-500 py-8">No liquidation data available</div>';
+            if (state.scanData && state.scanData.data) updateWhaleData(state.scanData.data);
+            else document.getElementById('whale-container').innerHTML = '<div class="text-center text-slate-500 py-8">No whale data available. Run a scan first.</div>';
+        }
+
+        function updateLiquidations(data) {
+            const container = document.getElementById('liquidations-container');
+            document.getElementById('liq-updated').textContent = formatTimeWithOffset(data.updated_at, state.timezoneOffset);
+            if (data.error && data.error.includes('timeout')) {
+                container.innerHTML = '<div class="text-center text-slate-500 py-8"><p>Liquidation data requires Binance API authentication.</p></div>';
+                return;
+            }
+            const heatmap = data.heatmap || [];
+            if (heatmap.length === 0) {
+                container.innerHTML = '<div class="text-center text-slate-500 py-8">No liquidation activity in the last 15 minutes</div>';
+                return;
+            }
+            const tv = data.total_value || 0;
+            const ts = tv > 1e9 ? (tv/1e9).toFixed(2)+'B' : tv > 1e6 ? (tv/1e6).toFixed(1)+'M' : formatNumber(tv);
+            let html = `<div class="flex justify-between items-center mb-4 text-xs text-slate-400"><span>Total: <span class="text-amber-400 font-semibold">$${ts}</span></span><span>${formatTimeWithOffset(data.updated_at, state.timezoneOffset)}</span></div>`;
+            html += heatmap.slice(0, 5).map(item => {
+                const sym = item.symbol || '-';
+                const total = item.total_value || 0;
+                const vs = total > 1e6 ? (total/1e6).toFixed(1)+'M' : total > 1e3 ? (total/1e3).toFixed(1)+'K' : formatNumber(total);
+                const lr = item.long_ratio || 50;
+                let badge = '';
+                if (item.intensity === 'high') badge = '<span class="text-[9px] bg-rose-500/20 text-rose-400 px-1.5 py-0.5 rounded">HIGH</span>';
+                else if (item.intensity === 'medium') badge = '<span class="text-[9px] bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded">MED</span>';
+                return `<div class="glass p-3 rounded-xl"><div class="flex justify-between items-center mb-2"><div class="flex items-center gap-2"><span class="text-white font-semibold text-sm">${escapeHtml(sym)}</span>${badge}</div><span class="text-xs text-slate-400">$${vs}</span></div><div class="flex items-center gap-2 text-[10px]"><span class="text-emerald-400">Long ${lr.toFixed(0)}%</span><div class="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden"><div class="h-full bg-emerald-500" style="width: ${lr}%"></div></div><span class="text-rose-400">${(100 - lr).toFixed(0)}% Short</span></div></div>`;
+            }).join('');
+            container.innerHTML = html;
+        }
+
+        function updateWhaleData(signals) {
+            const container = document.getElementById('whale-container');
+            const wm = signals.filter(s => s.microstructure).sort((a, b) => (b.confidence || 0) - (a.confidence || 0)).slice(0, 8);
+            if (wm.length === 0) {
+                container.innerHTML = '<div class="text-center text-slate-500 py-8">No microstructure data available</div>';
+                return;
+            }
+            container.innerHTML = wm.map(s => {
+                const m = s.microstructure;
+                const sent = (m.sentiment || 'neutral').toLowerCase();
+                const sc = sent === 'bullish' ? 'text-emerald-400' : sent === 'bearish' ? 'text-rose-400' : 'text-slate-400';
+                const si = sent === 'bullish' ? '🟢' : sent === 'bearish' ? '🔴' : '⚪';
+                const wp = m.whale_position || 0;
+                const lp = m.liquidation_pressure || 'neutral';
+                let lc = 'text-slate-500', ll = 'Neutral';
+                if (lp === 'long') { lc = 'text-emerald-400'; ll = 'Long Squeeze'; }
+                else if (lp === 'short') { lc = 'text-rose-400'; ll = 'Short Squeeze'; }
+                return `<div class="glass p-3 rounded-xl"><div class="flex justify-between items-center mb-2"><div class="flex items-center gap-2"><span class="text-white font-semibold text-sm">${escapeHtml(s.symbol)}</span><span class="text-[10px] ${s.signal === 'LONG' ? 'text-emerald-400' : s.signal === 'SHORT' ? 'text-rose-400' : 'text-slate-500'}">${escapeHtml(s.signal)}</span></div><span class="${sc} text-xs">${si} ${sent}</span></div><div class="space-y-1 text-[10px] text-slate-400"><div class="flex justify-between"><span>Whale Long:</span><span class="text-white">${(wp * 100).toFixed(1)}%</span></div><div class="flex justify-between"><span>Confidence:</span><span class="text-white">${m.sentiment_confidence || 0}%</span></div>${lp !== 'neutral' ? `<div class="flex justify-between"><span>Liq Pressure:</span><span class="${lc}">${ll}</span></div>` : ''}</div></div>`;
+            }).join('');
+        }
+
+        async function refreshLiquidations() {
+            document.getElementById('liquidations-container').innerHTML = '<div class="text-center text-slate-500 py-8"><svg class="animate-spin h-5 w-5 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Loading...</div>';
+            await api('/api/liquidations/refresh');
+            await loadMicrostructureData(true);
+        }
+
+        // ============================================
+        // POLLING & EVENTS
+        // ============================================
+        const pollManager = {
+            interval: null, baseInterval: 60000, maxInterval: 300000, currentInterval: 60000, consecutiveErrors: 0,
+            start() { this.stop(); this.tick(); this.interval = setInterval(() => this.tick(), this.currentInterval); },
+            stop() { if (this.interval) { clearInterval(this.interval); this.interval = null; } },
+            async tick() {
+                if (document.hidden) return;
+                try { await loadDashboard(); this.consecutiveErrors = 0; this.currentInterval = Math.min(this.currentInterval * 1.1, this.maxInterval); }
+                catch (e) { this.consecutiveErrors++; this.currentInterval = Math.min(this.baseInterval * Math.pow(2, this.consecutiveErrors), this.maxInterval); }
+                this.stop(); this.interval = setInterval(() => this.tick(), this.currentInterval);
+            },
+            reset() { this.currentInterval = this.baseInterval; this.consecutiveErrors = 0; this.stop(); this.tick(); this.interval = setInterval(() => this.tick(), this.currentInterval); }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboard();
+            pollManager.start();
+            document.addEventListener('visibilitychange', () => { if (document.hidden) pollManager.stop(); else { loadDashboard(); pollManager.start(); } });
+            document.getElementById('refresh-btn').addEventListener('click', () => { pollManager.reset(); forceRefresh(); });
+
+            // Timezone dropdown
+            const tzBtn = document.getElementById('timezone-btn');
+            const tzDrop = document.getElementById('timezone-dropdown');
+            const tzList = document.getElementById('timezone-list');
             
-            // Tab buttons - COMBINED with lazy loading
+            tzList.innerHTML = timezones.map(tz =>
+                `<button class="w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-white/10 transition-colors ${tz.name === state.timezone ? 'text-amber-400 font-bold' : 'text-slate-300'}" onclick="setTimezone('${tz.name}', ${tz.offset})">${tz.label}</button>`
+            ).join('');
+
+            // Initialize timezone label
+            document.getElementById('timezone-label').textContent = state.timezone;
+            
+            tzBtn.addEventListener('click', () => tzDrop.classList.toggle('hidden'));
+            document.addEventListener('click', (e) => { if (!tzBtn.contains(e.target) && !tzDrop.contains(e.target)) tzDrop.classList.add('hidden'); });
+
+            // Tabs
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    const tabName = e.target.dataset.tab;
+                    const tab = e.target.dataset.tab;
+                    document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('tab-active'); b.classList.add('tab-inactive'); });
+                    e.target.classList.remove('tab-inactive'); e.target.classList.add('tab-active');
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+                    document.getElementById(`tab-${tab}`).classList.remove('hidden');
+                    state.activeTab = tab;
+                    if (tab === 'microstructure') loadMicrostructureData();
+                    else if (tab === 'history') loadHistoryData();
+                });
+            });
 
-                    // Update tab styling
-                    document.querySelectorAll('.tab-btn').forEach(b => {
-                        b.classList.remove('tab-active');
-                        b.classList.add('tab-inactive');
-                    });
-                    e.target.classList.remove('tab-inactive');
-                    e.target.classList.add('tab-active');
-
-                    // Show/hide content
-                    document.querySelectorAll('.tab-content').forEach(content => {
-                        content.classList.add('hidden');
-                    });
-                    document.getElementById(`tab-${tabName}`).classList.remove('hidden');
-
-                    // Lazy load microstructure data only when tab is clicked
-                    if (tabName === 'microstructure') {
-                        loadMicrostructureData();
-                    }
+            // Time range
+            document.querySelectorAll('.time-filter').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    document.querySelectorAll('.time-filter').forEach(b => { b.classList.remove('bg-white/10', 'text-white', 'shadow-lg'); b.classList.add('text-slate-400'); });
+                    e.target.classList.add('bg-white/10', 'text-white', 'shadow-lg');
+                    e.target.classList.remove('text-slate-400');
+                    const range = e.target.dataset.range;
+                    state.timeRange = range === 'all' ? 'all' : parseInt(range);
+                    state.historyPage = 1;
+                    await loadHistoryData();
                 });
             });
 
             // History filter
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    document.querySelectorAll('.filter-btn').forEach(b => {
-                        b.classList.remove('active', 'bg-white/20', 'text-white');
-                        b.classList.add('text-slate-400');
-                    });
-                    e.target.classList.add('active', 'bg-white/20', 'text-white');
-                    e.target.classList.remove('text-slate-400');
-
-                    // Filter history
+                    document.querySelectorAll('.filter-btn').forEach(b => { b.classList.remove('active', 'bg-white/20', 'text-white'); b.classList.add('text-slate-400'); });
+                    e.target.classList.add('active', 'bg-white/20', 'text-white'); e.target.classList.remove('text-slate-400');
                     const filter = e.target.dataset.filter;
-                    filterHistory(filter);
+                    state.currentFilter = filter;
+                    state.historyPage = 1;
+                    applyHistoryFilter();
                 });
             });
+
+            // Calendar dropdown
+            const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            const calBtn = document.getElementById('cal-nav-btn');
+            const calDrop = document.getElementById('cal-dropdown');
+            let ddYear = state.calendarYear;
+
+            function renderCalDropdown() {
+                document.getElementById('cal-year-label').textContent = ddYear;
+                const mGrid = document.getElementById('cal-months');
+                mGrid.innerHTML = months.map((m, i) => {
+                    const active = ddYear === state.calendarYear && (i + 1) === state.calendarMonth;
+                    return `<button class="px-2 py-1.5 text-xs rounded-lg ${active ? 'bg-amber-500/20 text-amber-400 font-bold' : 'text-slate-400 hover:bg-white/10'}" data-month="${i + 1}">${m}</button>`;
+                }).join('');
+                mGrid.querySelectorAll('button').forEach(b => {
+                    b.addEventListener('click', () => {
+                        state.calendarMonth = parseInt(b.dataset.month);
+                        state.calendarYear = ddYear;
+                        calDrop.classList.add('hidden');
+                        loadHistoryData();
+                    });
+                });
+            }
+
+            calBtn.addEventListener('click', () => { renderCalDropdown(); calDrop.classList.toggle('hidden'); });
+            document.addEventListener('click', (e) => { if (!calBtn.contains(e.target) && !calDrop.contains(e.target)) calDrop.classList.add('hidden'); });
+            document.getElementById('cal-prev').addEventListener('click', () => { ddYear--; renderCalDropdown(); });
+            document.getElementById('cal-next').addEventListener('click', () => { ddYear++; renderCalDropdown(); });
         });
 
-        // Refresh Liquidations
-        async function refreshLiquidations() {
-            console.log('[Dashboard] Refreshing liquidations...');
-            document.getElementById('liquidations-container').innerHTML = `
-                <div class="text-center text-slate-500 py-8">
-                    <svg class="animate-spin h-5 w-5 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Loading liquidation data...
-                </div>
-            `;
-
-            // Force refresh via API
-            await api('/api/liquidations/refresh');
-
-            // Load updated data
-            await loadMicrostructureData();
-        }
-
-        // Load Microstructure Data (Liquidations & Whale) - LAZY LOADED
-        async function loadMicrostructureData(force = false) {
-            // Only load once unless forced
-            if (state._loaded.microstructure && !force) {
-                console.log('[Dashboard] Microstructure already loaded, skipping');
-                return;
-            }
-
-            console.log('[Dashboard] Loading microstructure data...');
-            state._loaded.microstructure = true;
-
-            // Load liquidations
-            const liqRes = await api('/api/liquidations');
-            console.log('[Dashboard] Liquidations:', liqRes);
-            if (liqRes.ok) {
-                updateLiquidations(liqRes);
-            } else {
-                document.getElementById('liquidations-container').innerHTML = `
-                    <div class="text-center text-slate-500 py-8">No liquidation data available</div>
-                `;
-            }
-
-            // Whale data comes from scan data (microstructure field)
-            if (state.scanData && state.scanData.data) {
-                updateWhaleData(state.scanData.data);
-            } else {
-                document.getElementById('whale-container').innerHTML = `
-                    <div class="text-center text-slate-500 py-8">No whale data available. Run a scan first.</div>
-                `;
-            }
-        }
-
-        // Update Liquidations Panel
-        function updateLiquidations(data) {
-            const container = document.getElementById('liquidations-container');
-            const heatmap = data.heatmap || [];
-
-            // Update timestamp
-            document.getElementById('liq-updated').textContent = data.updated_at 
-                ? new Date(data.updated_at).toLocaleTimeString() 
-                : '—';
-
-            if (data.error && data.error.includes('timeout')) {
-                container.innerHTML = `
-                    <div class="text-center text-slate-500 py-8">
-                        <p>Liquidation data requires Binance API authentication.</p>
-                        <p class="text-xs mt-2">The forceOrders endpoint requires special API permissions.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            if (heatmap.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center text-slate-500 py-8">No liquidation activity in the last 15 minutes</div>
-                `;
-                return;
-            }
-
-            // Show summary
-            const totalVal = data.total_value || 0;
-            const totalStr = totalVal > 1e9 ? (totalVal/1e9).toFixed(2)+'B' : totalVal > 1e6 ? (totalVal/1e6).toFixed(1)+'M' : formatNumber(totalVal);
-
-            let html = `
-                <div class="flex justify-between items-center mb-4 text-xs text-slate-400">
-                    <span>Total: <span class="text-amber-400 font-semibold">$${totalStr}</span></span>
-                    <span>${data.updated_at ? new Date(data.updated_at).toLocaleTimeString() : '—'}</span>
-                </div>
-            `;
-
-            // Show top 5 liquidated coins
-            html += heatmap.slice(0, 5).map(item => {
-                const symbol = item.symbol || '—';
-                const total = item.total_value || 0;
-                const longs = item.long_liquidations || 0;
-                const shorts = item.short_liquidations || 0;
-                const longRatio = item.long_ratio || 50;
-
-                const valStr = total > 1e6 ? (total/1e6).toFixed(1)+'M' : total > 1e3 ? (total/1e3).toFixed(1)+'K' : formatNumber(total);
-
-                // Intensity badge
-                let intensityBadge = '';
-                if (item.intensity === 'high') intensityBadge = '<span class="text-[9px] bg-rose-500/20 text-rose-400 px-1.5 py-0.5 rounded">HIGH</span>';
-                else if (item.intensity === 'medium') intensityBadge = '<span class="text-[9px] bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded">MED</span>';
-
-                return `
-                    <div class="glass p-3 rounded-xl">
-                        <div class="flex justify-between items-center mb-2">
-                            <div class="flex items-center gap-2">
-                                <span class="text-white font-semibold text-sm">${escapeHtml(symbol)}</span>
-                                ${intensityBadge}
-                            </div>
-                            <span class="text-xs text-slate-400">$${valStr}</span>
-                        </div>
-                        <div class="flex items-center gap-2 text-[10px]">
-                            <span class="text-emerald-400">Long ${longRatio.toFixed(0)}%</span>
-                            <div class="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                                <div class="h-full bg-emerald-500" style="width: ${longRatio}%"></div>
-                            </div>
-                            <span class="text-rose-400">${(100 - longRatio).toFixed(0)}% Short</span>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            container.innerHTML = html;
-        }
-
-        // Update Whale Data Panel - show top microstructure data from ALL coins
-        function updateWhaleData(signals) {
-            const container = document.getElementById('whale-container');
-
-            // Get coins with microstructure data, sorted by confidence
-            const withMicro = signals
-                .filter(s => s.microstructure)
-                .sort((a, b) => (b.confidence || 0) - (a.confidence || 0))
-                .slice(0, 8);
-
-            if (withMicro.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center text-slate-500 py-8">No microstructure data available</div>
-                `;
-                return;
-            }
-
-            container.innerHTML = withMicro.map(s => {
-                const micro = s.microstructure;
-                const symbol = s.symbol || '—';
-                const sentiment = micro.sentiment || 'neutral';
-                const confidence = micro.sentiment_confidence || 0;
-                const whalePos = micro.whale_position || 0;
-                const liqPressure = micro.liquidation_pressure || 'neutral';
-                const signals_list = micro.signals || [];
-
-                let sentimentColor = 'text-slate-400';
-                let sentimentIcon = '⚪';
-                if (sentiment === 'bullish') {
-                    sentimentColor = 'text-emerald-400';
-                    sentimentIcon = '🟢';
-                } else if (sentiment === 'bearish') {
-                    sentimentColor = 'text-rose-400';
-                    sentimentIcon = '🔴';
-                }
-
-                let pressureColor = 'text-slate-500';
-                let pressureLabel = 'Neutral';
-                if (liqPressure === 'long') { pressureColor = 'text-emerald-400'; pressureLabel = 'Long Squeeze'; }
-                else if (liqPressure === 'short') { pressureColor = 'text-rose-400'; pressureLabel = 'Short Squeeze'; }
-
-                return `
-                    <div class="glass p-3 rounded-xl">
-                        <div class="flex justify-between items-center mb-2">
-                            <div class="flex items-center gap-2">
-                                <span class="text-white font-semibold text-sm">${escapeHtml(symbol)}</span>
-                                <span class="text-[10px] ${s.signal === 'LONG' ? 'text-emerald-400' : s.signal === 'SHORT' ? 'text-rose-400' : 'text-slate-500'}">${escapeHtml(s.signal)}</span>
-                            </div>
-                            <span class="${sentimentColor} text-xs">${sentimentIcon} ${sentiment}</span>
-                        </div>
-                        <div class="space-y-1 text-[10px] text-slate-400">
-                            <div class="flex justify-between">
-                                <span>Whale Long:</span>
-                                <span class="text-white">${(whalePos * 100).toFixed(1)}%</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>Confidence:</span>
-                                <span class="text-white">${confidence}%</span>
-                            </div>
-                            ${liqPressure !== 'neutral' ? `
-                            <div class="flex justify-between">
-                                <span>Liq Pressure:</span>
-                                <span class="${pressureColor}">${pressureLabel}</span>
-                            </div>
-                            ` : ''}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // Filter history
-        function filterHistory(filter) {
-            if (!state.historyData) return;
-
-            const container = document.getElementById('history-container');
-            let filtered = state.historyData;
-
-            if (filter === 'win') {
-                filtered = state.historyData.filter(h => h.result === 'WIN');
-            } else if (filter === 'loss') {
-                filtered = state.historyData.filter(h => h.result === 'LOSS');
-            }
-
-            // Re-render with filtered data
-            const closed = filtered.filter(h => h.result === 'WIN' || h.result === 'LOSS').slice(0, 20);
-
-            if (closed.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center text-slate-500 py-8">No ${filter} trades found</div>
-                `;
-                return;
-            }
-
-            container.innerHTML = closed.map(h => {
-                const isWin = h.result === 'WIN';
-                const colorClass = isWin ? 'win-positive' : 'win-negative';
-                const pnl = h.pnl_pct || 0;
-                const date = h.timestamp ? h.timestamp.split('T')[0] : '—';
-                const symbol = h.symbol || '—';
-
-                return `
-                    <div class="glass p-4 rounded-2xl flex items-center justify-between hover:bg-white/[0.05] transition-colors">
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-xl ${isWin ? 'bg-emerald-500/20' : 'bg-rose-500/20'} flex items-center justify-center">
-                                <span class="text-lg">${isWin ? '✅' : '❌'}</span>
-                            </div>
-                            <div>
-                                <div class="text-white font-semibold text-sm">
-                                    <span class="text-amber-400">${escapeHtml(symbol)}</span>
-                                    <span class="mx-1">•</span>
-                                    <span class="${h.signal === 'LONG' ? 'text-emerald-400' : 'text-rose-400'}">${escapeHtml(h.signal)}</span>
-                                </div>
-                                <div class="text-xs text-slate-500">${escapeHtml(date)} • ${escapeHtml(h.regime || 'SIDEWAYS')}</div>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <div class="${colorClass} font-bold">${isWin ? '+' : ''}${escapeHtml(pnl.toFixed(1))}%</div>
-                            <div class="text-xs text-slate-500">${escapeHtml(h.confidence || 0)}% conf</div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+        function setTimezone(name, offset) {
+            state.timezone = name;
+            state.timezoneOffset = offset;
+            localStorage.setItem('screener_timezone', name);
+            localStorage.setItem('screener_offset', offset);
+            document.getElementById('timezone-label').textContent = name;
+            document.getElementById('timezone-dropdown').classList.add('hidden');
+            // Refresh all times
+            loadDashboard();
         }
     </script>
 </body>
