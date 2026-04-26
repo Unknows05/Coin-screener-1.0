@@ -2,10 +2,12 @@
 Scorer Engine — Advanced Quantitative Analysis.
 Refactored for Balanced Momentum & Breakout Detection.
 """
-import pandas as pd
 import logging
 
+import pandas as pd
+
 logger = logging.getLogger(__name__)
+
 
 class Scorer:
     """
@@ -13,7 +15,7 @@ class Scorer:
     Uses BB Squeeze, Volume Z-Score, and RSI Momentum.
     """
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         self.config = config
         # Logic Gate: 15m dominates for timing
         self.tf_weights = config.get("timeframe_weights", {"15m": 0.60, "1h": 0.30, "4h": 0.10})
@@ -22,13 +24,20 @@ class Scorer:
     def score_coin(self, klines_by_tf: dict[str, list[dict]]) -> dict:
         """
         Score a coin based on multi-TF logic and anomaly detection.
+        
         Returns score 0-100 where:
         - 0-40: Bearish zone (SHORT candidates)
         - 40-60: Neutral zone (WAIT)
         - 60-100: Bullish zone (LONG candidates)
+        
+        Args:
+            klines_by_tf: Dictionary mapping timeframe to list of kline dicts
+            
+        Returns:
+            Dictionary containing composite_score, tf_scores, and tf_metrics
         """
-        tf_scores = {}
-        tf_metrics = {}  # Store detailed metrics per timeframe
+        tf_scores: dict[str, float] = {}
+        tf_metrics: dict[str, dict] = {}  # Store detailed metrics per timeframe
         
         # 1. Analyze Each Timeframe
         for tf, klines in klines_by_tf.items():
@@ -159,6 +168,7 @@ class Scorer:
     # --- Math Helpers (Robust) ---
 
     def _calc_rsi(self, df: pd.DataFrame, period: int) -> pd.Series:
+        """Calculate Relative Strength Index."""
         delta = df["close"].diff()
         gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
         loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
@@ -166,6 +176,7 @@ class Scorer:
         return 100 - (100 / (1 + rs))
 
     def _calc_macd_histogram(self, df: pd.DataFrame) -> pd.Series:
+        """Calculate MACD histogram."""
         ema12 = df["close"].ewm(span=12, adjust=False).mean()
         ema26 = df["close"].ewm(span=26, adjust=False).mean()
         macd = ema12 - ema26
@@ -173,6 +184,7 @@ class Scorer:
         return macd - signal
 
     def _calc_volume_zscore(self, df: pd.DataFrame) -> pd.Series:
+        """Calculate volume z-score."""
         vol_mean = df["volume"].rolling(window=20).mean()
         vol_std = df["volume"].rolling(window=20).std()
         return (df["volume"] - vol_mean) / (vol_std + 1e-10)

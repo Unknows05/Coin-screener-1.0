@@ -3,6 +3,7 @@
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -13,8 +14,22 @@ from src.signals import generate_signal
 from src.display import print_screen_result, print_error
 
 
-def main():
-    config = yaml.safe_load(open("config.yaml"))
+def load_config(path: str = "config.yaml") -> dict[str, Any]:
+    """Load configuration from YAML file.
+    
+    Args:
+        path: Path to configuration file
+        
+    Returns:
+        Configuration dictionary
+    """
+    with open(path, "r") as f:
+        return yaml.safe_load(f)
+
+
+def main() -> None:
+    """Run a single screening cycle and display results."""
+    config = load_config()
     api = BinanceFuturesAPI()
     scorer = Scorer(config)
 
